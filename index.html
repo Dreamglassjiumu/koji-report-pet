@@ -7,15 +7,20 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="top-ribbon" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
   <header class="app-header">
-    <div>
-      <p class="eyebrow">Koji Report Pet</p>
-      <h1>Koji Report Pet</h1>
-      <p class="subtitle">文案组本地日报桌宠助手</p>
+    <div class="header-copy">
+      <p class="eyebrow">Koji Report Pet · v0.2</p>
+      <h1>Koji 日报桌宠助手</h1>
+      <p class="subtitle">文案组本地记录、日报整理、周报素材小工具。</p>
     </div>
-    <div class="today-pill" aria-label="今日日期">
+    <div class="header-card" aria-label="今日日期">
       <span>今天</span>
       <strong id="todayDate">--</strong>
+      <small>数据只保存在本机浏览器</small>
     </div>
   </header>
 
@@ -31,7 +36,7 @@
 
       <form id="recordForm" class="record-form">
         <label for="recordText">事项内容</label>
-        <textarea id="recordText" rows="5" placeholder="例如：整理 Project：X 世界观资料，并确认角色台词问题……"></textarea>
+        <textarea id="recordText" rows="4" placeholder="例如：整理 Project：X 世界观资料，并确认角色台词问题……"></textarea>
         <div class="form-row">
           <label for="recordTag">项目标签</label>
           <select id="recordTag"></select>
@@ -64,10 +69,15 @@
       </div>
 
       <label for="reportOutput">生成结果（可编辑）</label>
-      <textarea id="reportOutput" rows="10" placeholder="点击“生成日报”后，Koji 会在本地整理今天的记录。"></textarea>
+      <textarea id="reportOutput" rows="12" placeholder="点击“生成日报”后，Koji 会在本地整理今天的记录。"></textarea>
       <div class="button-row">
         <button id="saveReportBtn" type="button" class="secondary-btn">保存日报</button>
         <button id="copyReportBtn" type="button" class="secondary-btn">复制日报</button>
+        <button id="copyGptPromptBtn" type="button" class="secondary-btn">复制给 GPT 润色</button>
+        <button id="exportTxtBtn" type="button" class="secondary-btn">导出 TXT</button>
+        <button id="exportMarkdownBtn" type="button" class="secondary-btn">导出 Markdown</button>
+        <button id="generateBriefBtn" type="button" class="ghost-btn">生成今日简报</button>
+        <button id="generateWeeklyBtn" type="button" class="ghost-btn">生成周报素材</button>
       </div>
     </section>
 
@@ -88,7 +98,7 @@
       <div class="section-heading">
         <div>
           <p class="section-kicker">D. 设置</p>
-          <h2 id="settingsTitle">本地偏好</h2>
+          <h2 id="settingsTitle">本地偏好与动作测试</h2>
         </div>
       </div>
 
@@ -96,15 +106,25 @@
     </section>
   </main>
 
-  <aside id="kojiPet" class="koji-pet pet-idle" aria-live="polite" aria-label="Koji 桌宠" role="button" tabindex="0">
-    <div id="petBubble" class="pet-bubble">来了，今天干啥了？</div>
-    <div class="pet-body">
-      <div id="petFace" class="pet-face">🐾</div>
+  <aside id="kojiPet" class="koji-pet pet-idle" aria-live="polite" aria-label="Koji 桌宠" tabindex="0">
+    <div class="pet-bubble-wrap">
+      <div id="petBubble" class="pet-bubble">来了，今天干啥了？</div>
       <div id="petLabel" class="pet-label">待机</div>
+    </div>
+    <div class="pet-card">
+      <button id="petMiniButton" class="pet-mini-button" type="button" aria-label="展开 Koji">🐾</button>
+      <div id="petAvatar" class="pet-avatar">
+        <span id="petFace" class="pet-face">🐾</span>
+      </div>
+      <div class="pet-actions">
+        <button id="petRecordBtn" type="button">记录</button>
+        <button id="petNudgeBtn" type="button">催一下 Koji</button>
+        <button id="petToggleBtn" type="button">收起</button>
+      </div>
     </div>
   </aside>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="toastContainer" class="toast-container" role="status" aria-live="polite"></div>
 
   <script src="app.js" defer></script>
 </body>
