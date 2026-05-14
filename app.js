@@ -67,6 +67,7 @@ let toastIndex = 0;
 const $ = (selector) => document.querySelector(selector);
 
 function init() {
+  if (window.kojiDesktop) document.body.classList.add("electron-desktop-mode");
   records = loadRecords();
   reports = loadReports();
   settings = loadSettings();
@@ -585,6 +586,7 @@ function formatRecordText(record) {
 
 function setPetState(stateKey, overrideDuration) {
   const state = petStates[stateKey] || petStates.idle;
+  window.kojiDesktop?.setPetState?.(state.key);
   const pet = $("#kojiPet");
   const face = $("#petFace");
   const avatar = $("#petAvatar");

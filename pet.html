@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koji Pet</title>
+  <link rel="stylesheet" href="pet.css">
+</head>
+<body>
+  <main id="petShell" class="pet-shell pet-idle" aria-live="polite">
+    <section class="pet-bubble-wrap">
+      <div id="petBubble" class="pet-bubble">来了，今天干啥了？</div>
+      <div id="petLabel" class="pet-label">待机</div>
+    </section>
+
+    <button id="petBody" class="pet-body" type="button" aria-label="打开或隐藏 Koji Report Pet 主窗口">
+      <span id="petFace" class="pet-face">🐾</span>
+    </button>
+
+    <nav class="pet-actions" aria-label="Koji 桌宠快捷操作">
+      <button id="recordBtn" type="button">记录</button>
+      <button id="toggleBtn" type="button">面板</button>
+      <button id="quitBtn" type="button">退出</button>
+    </nav>
+  </main>
+
+  <script src="pet.js" defer></script>
+</body>
+</html>
