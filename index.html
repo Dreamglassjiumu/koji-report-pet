@@ -13,7 +13,7 @@
 
   <header class="app-header">
     <div class="header-copy">
-      <p class="eyebrow">Koji Report Pet · v0.2</p>
+      <p class="eyebrow">Koji Report Pet · v0.2.1</p>
       <h1>Koji 日报桌宠助手</h1>
       <p class="subtitle">文案组本地记录、日报整理、周报素材小工具。</p>
     </div>
@@ -70,14 +70,18 @@
 
       <label for="reportOutput">生成结果（可编辑）</label>
       <textarea id="reportOutput" rows="12" placeholder="点击“生成日报”后，Koji 会在本地整理今天的记录。"></textarea>
-      <div class="button-row">
-        <button id="saveReportBtn" type="button" class="secondary-btn">保存日报</button>
-        <button id="copyReportBtn" type="button" class="secondary-btn">复制日报</button>
-        <button id="copyGptPromptBtn" type="button" class="secondary-btn">复制给 GPT 润色</button>
-        <button id="exportTxtBtn" type="button" class="secondary-btn">导出 TXT</button>
-        <button id="exportMarkdownBtn" type="button" class="secondary-btn">导出 Markdown</button>
-        <button id="generateBriefBtn" type="button" class="ghost-btn">生成今日简报</button>
-        <button id="generateWeeklyBtn" type="button" class="ghost-btn">生成周报素材</button>
+      <div class="report-action-panel" aria-label="日报操作按钮区">
+        <div class="report-action-row report-action-row-primary">
+          <button id="saveReportBtn" type="button" class="secondary-btn">保存日报</button>
+          <button id="copyReportBtn" type="button" class="secondary-btn">复制日报</button>
+          <button id="copyGptPromptBtn" type="button" class="secondary-btn">复制给 GPT 润色</button>
+        </div>
+        <div class="report-action-row report-action-row-tools">
+          <button id="exportTxtBtn" type="button" class="secondary-btn">导出 TXT</button>
+          <button id="exportMarkdownBtn" type="button" class="secondary-btn">导出 Markdown</button>
+          <button id="generateBriefBtn" type="button" class="ghost-btn">生成今日简报</button>
+          <button id="generateWeeklyBtn" type="button" class="ghost-btn">生成周报素材</button>
+        </div>
       </div>
     </section>
 
@@ -107,12 +111,12 @@
   </main>
 
   <aside id="kojiPet" class="koji-pet pet-idle" aria-live="polite" aria-label="Koji 桌宠" tabindex="0">
-    <div class="pet-bubble-wrap">
-      <div id="petBubble" class="pet-bubble">来了，今天干啥了？</div>
-      <div id="petLabel" class="pet-label">待机</div>
-    </div>
     <div class="pet-card">
       <button id="petMiniButton" class="pet-mini-button" type="button" aria-label="展开 Koji">🐾</button>
+      <div class="pet-bubble-wrap">
+        <div id="petBubble" class="pet-bubble">来了，今天干啥了？</div>
+        <div id="petLabel" class="pet-label">待机</div>
+      </div>
       <div id="petAvatar" class="pet-avatar">
         <span id="petFace" class="pet-face">🐾</span>
       </div>

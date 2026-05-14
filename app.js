@@ -625,8 +625,11 @@ function makePetDraggable() {
   });
   pet.addEventListener("pointermove", (event) => {
     if (!dragging) return;
-    const nextRight = Math.max(8, Math.min(window.innerWidth - 70, startRight - (event.clientX - startX)));
-    const nextBottom = Math.max(8, Math.min(window.innerHeight - 70, startBottom - (event.clientY - startY)));
+    const bounds = pet.getBoundingClientRect();
+    const maxRight = Math.max(8, window.innerWidth - bounds.width - 8);
+    const maxBottom = Math.max(8, window.innerHeight - bounds.height - 8);
+    const nextRight = Math.max(8, Math.min(maxRight, startRight - (event.clientX - startX)));
+    const nextBottom = Math.max(8, Math.min(maxBottom, startBottom - (event.clientY - startY)));
     pet.style.right = `${nextRight}px`;
     pet.style.bottom = `${nextBottom}px`;
   });
