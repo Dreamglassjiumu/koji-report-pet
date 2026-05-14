@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koji Report Pet</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Koji Report Pet</p>
+      <h1>Koji Report Pet</h1>
+      <p class="subtitle">文案组本地日报桌宠助手</p>
+    </div>
+    <div class="today-pill" aria-label="今日日期">
+      <span>今天</span>
+      <strong id="todayDate">--</strong>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="card record-card" aria-labelledby="todayRecordTitle">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">A. 今日记录</p>
+          <h2 id="todayRecordTitle">今天做了什么？</h2>
+        </div>
+        <span class="hint">白天随手记，晚上 Koji 帮你整。</span>
+      </div>
+
+      <form id="recordForm" class="record-form">
+        <label for="recordText">事项内容</label>
+        <textarea id="recordText" rows="5" placeholder="例如：整理 Project：X 世界观资料，并确认角色台词问题……"></textarea>
+        <div class="form-row">
+          <label for="recordTag">项目标签</label>
+          <select id="recordTag"></select>
+          <button type="submit" class="primary-btn">添加事项</button>
+        </div>
+      </form>
+
+      <div id="todayRecords" class="record-list" aria-live="polite"></div>
+    </section>
+
+    <section class="card report-card" aria-labelledby="reportTitle">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">B. 日报生成</p>
+          <h2 id="reportTitle">本地模板生成日报</h2>
+        </div>
+        <button id="nudgePetBtn" type="button" class="ghost-btn">催一下 Koji</button>
+      </div>
+
+      <div class="form-row report-controls">
+        <label for="templateSelect">日报模板</label>
+        <select id="templateSelect">
+          <option value="formal">正式日报</option>
+          <option value="brief">简洁日报</option>
+          <option value="detailed">详细日报</option>
+          <option value="copywriting">文案组日报</option>
+          <option value="feedback">问题反馈型日报</option>
+        </select>
+        <button id="generateBtn" type="button" class="primary-btn">生成日报</button>
+      </div>
+
+      <label for="reportOutput">生成结果（可编辑）</label>
+      <textarea id="reportOutput" rows="10" placeholder="点击“生成日报”后，Koji 会在本地整理今天的记录。"></textarea>
+      <div class="button-row">
+        <button id="saveReportBtn" type="button" class="secondary-btn">保存日报</button>
+        <button id="copyReportBtn" type="button" class="secondary-btn">复制日报</button>
+      </div>
+    </section>
+
+    <section class="card history-card" aria-labelledby="historyTitle">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">C. 历史记录</p>
+          <h2 id="historyTitle">日期档案</h2>
+        </div>
+      </div>
+      <div class="history-layout">
+        <div id="historyDates" class="history-dates"></div>
+        <div id="historyDetail" class="history-detail empty-state">选择一个日期，查看事项与日报。</div>
+      </div>
+    </section>
+
+    <section class="card settings-card" aria-labelledby="settingsTitle">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">D. 设置</p>
+          <h2 id="settingsTitle">本地偏好</h2>
+        </div>
+      </div>
+
+      <div id="settingsPanel" class="settings-grid"></div>
+    </section>
+  </main>
+
+  <aside id="kojiPet" class="koji-pet pet-idle" aria-live="polite" aria-label="Koji 桌宠" role="button" tabindex="0">
+    <div id="petBubble" class="pet-bubble">来了，今天干啥了？</div>
+    <div class="pet-body">
+      <div id="petFace" class="pet-face">🐾</div>
+      <div id="petLabel" class="pet-label">待机</div>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
