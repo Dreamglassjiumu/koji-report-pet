@@ -264,6 +264,14 @@ input:focus, select:focus, textarea:focus {
 .pet-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); gap: 0.55rem; margin-top: 0.75rem; }
 .pet-action-grid .tiny-btn { width: 100%; }
 .danger-zone { background: rgba(255, 237, 237, 0.7); }
+.electron-desktop-mode .koji-pet { display: none; }
+.electron-desktop-mode .settings-card::after {
+  content: "v0.3 Electron 桌面版会使用独立透明桌宠窗口；这里保留 Koji 状态预览 / 动作测试。";
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 
 .koji-pet {
   position: fixed;

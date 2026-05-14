@@ -1,0 +1,41 @@
+{
+  "name": "koji-report-pet",
+  "version": "0.3.0",
+  "description": "Koji Report Pet desktop pet daily report assistant",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "package": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.koji.reportpet",
+    "productName": "Koji Report Pet",
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "main.js",
+      "preload.js",
+      "pet.html",
+      "pet.css",
+      "pet.js",
+      "assets/**/*",
+      "README.md"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3"
+  }
+}
