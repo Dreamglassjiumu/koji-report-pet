@@ -18,6 +18,7 @@ const defaultSettings = {
   defaultTemplate: "formal",
   customTags: [],
   animationsEnabled: true,
+  kojiMotionLevel: "normal",
   petMinimized: false,
   reportFormat: { ...defaultReportFormat },
   kojiTone: "default",
@@ -161,6 +162,8 @@ function loadSettings() {
     kojiTone: "default",
     dialogueTone: "default",
     hourlyChimeEnabled: Boolean(stored.hourlyChimeEnabled),
+    kojiMotionLevel: stored.kojiMotionLevel || (stored.animationsEnabled === false ? "off" : "normal"),
+    animationsEnabled: stored.kojiMotionLevel ? stored.kojiMotionLevel !== "off" : stored.animationsEnabled !== false,
     currentCharacter: stored.currentCharacter || "koji",
     currentSkin: stored.currentSkin || "default",
     lastHourlyChimeKey: stored.lastHourlyChimeKey || "",
@@ -306,7 +309,13 @@ function renderSettings() {
       <select id="defaultTemplateInput">
         ${Object.entries(templateNames).map(([key, name]) => `<option value="${key}" ${settings.defaultTemplate === key ? "selected" : ""}>${name}</option>`).join("")}
       </select>
-      <label class="check-line"><input id="animationsInput" type="checkbox" ${settings.animationsEnabled ? "checked" : ""}> 开启 Koji 动画</label>
+      <label for="kojiMotionLevelInput">Koji 动画强度</label>
+      <select id="kojiMotionLevelInput">
+        <option value="off" ${settings.kojiMotionLevel === "off" ? "selected" : ""}>关闭</option>
+        <option value="subtle" ${settings.kojiMotionLevel === "subtle" ? "selected" : ""}>轻微</option>
+        <option value="normal" ${settings.kojiMotionLevel === "normal" ? "selected" : ""}>标准</option>
+        <option value="lively" ${settings.kojiMotionLevel === "lively" ? "selected" : ""}>活泼</option>
+      </select>
       <label class="check-line"><input id="hourlyChimeInput" type="checkbox" ${settings.hourlyChimeEnabled ? "checked" : ""}> 启用整点报时</label>
       <p>当前版本只显示文字气泡，不播放真实语音；Koji 使用统一默认台词池。</p>
     </div>
@@ -359,7 +368,7 @@ function renderSettings() {
   $("#saveSettingsBtn").addEventListener("click", persistSettingsFromPanel);
   $("#clearAllBtn").addEventListener("click", clearAllData);
   $("#refreshAssetStatusBtn")?.addEventListener("click", renderPetActionTester);
-  ["usernameInput", "defaultTemplateInput", "animationsInput", "hourlyChimeInput", "formatTitleInput", "formatPreferenceInput", "formatClosingInput", "includeDateInput", "includePlanInput", "includeIssuesInput", "customTagsInput"].forEach((id) => {
+  ["usernameInput", "defaultTemplateInput", "kojiMotionLevelInput", "hourlyChimeInput", "formatTitleInput", "formatPreferenceInput", "formatClosingInput", "includeDateInput", "includePlanInput", "includeIssuesInput", "customTagsInput"].forEach((id) => {
     $(`#${id}`).addEventListener("change", persistSettingsFromPanel);
   });
 }
@@ -715,6 +724,10 @@ function renderPetFace(face, state) {
   tryNext();
 }
 
+function getMotionLevel(level = settings.kojiMotionLevel) {
+  return ["off", "subtle", "normal", "lively"].includes(level) ? level : "normal";
+}
+
 function setPetState(stateKey, overrideDuration) {
   const state = petStates[stateKey] || petStates.idle;
   if (!isApplyingDesktopPetState) window.kojiDesktop?.setPetState?.(state.key);
@@ -722,7 +735,7 @@ function setPetState(stateKey, overrideDuration) {
   const face = $("#petFace");
   const avatar = $("#petAvatar");
   clearTimeout(petTimer);
-  pet.className = `koji-pet ${state.cssClass} ${settings.animationsEnabled ? "" : "pet-no-animation"} ${settings.petMinimized ? "pet-minimized" : ""}`;
+  pet.className = `koji-pet ${state.cssClass} state-${state.key.replace(/_/g, "-")} motion-${getMotionLevel()} ${settings.petMinimized ? "pet-minimized" : ""}`;
   $("#petBubble").textContent = kojiConfig.getDialogue(state.key, "default", state.message);
   $("#petLabel").textContent = state.label;
   $("#petMiniButton").textContent = state.emoji;
@@ -804,7 +817,8 @@ function renderTagOptions() {
 function persistSettingsFromPanel() {
   settings.username = $("#usernameInput").value.trim();
   settings.defaultTemplate = $("#defaultTemplateInput").value;
-  settings.animationsEnabled = $("#animationsInput").checked;
+  settings.kojiMotionLevel = getMotionLevel($("#kojiMotionLevelInput")?.value);
+  settings.animationsEnabled = settings.kojiMotionLevel !== "off";
   settings.dialogueTone = "default";
   settings.kojiTone = "default";
   settings.hourlyChimeEnabled = Boolean($("#hourlyChimeInput")?.checked);

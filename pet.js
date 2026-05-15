@@ -2,12 +2,13 @@ const defaultTags = ["默认", "Project：X", "公司工作", "pitch创作", "�
 const kojiConfig = window.KojiConfig;
 const stateOrder = kojiConfig.stateOrder;
 const petStates = kojiConfig.petStates;
-const defaultPetSettings = { kojiTone: "default", dialogueTone: "default", hourlyChimeEnabled: false, currentCharacter: "koji", currentSkin: "default", lastHourlyChimeKey: "" };
+const defaultPetSettings = { kojiTone: "default", dialogueTone: "default", hourlyChimeEnabled: false, currentCharacter: "koji", currentSkin: "default", lastHourlyChimeKey: "", kojiMotionLevel: "normal" };
 
 const $ = (selector) => document.querySelector(selector);
 let petTimer = null;
 let clickTimer = null;
 let dragInfo = null;
+let dragReturnStateKey = "idle";
 let suppressClickUntil = 0;
 let currentStateKey = "idle";
 let quickRecordVisible = false;
@@ -111,6 +112,38 @@ function setBubble(message) {
   setPetMessage(message);
 }
 
+function getMotionLevel() {
+  const level = petSettings.kojiMotionLevel || (petSettings.animationsEnabled === false ? "off" : "normal");
+  return ["off", "subtle", "normal", "lively"].includes(level) ? level : "normal";
+}
+
+function clearPetAnimationState() {
+  const shell = $("#petShell");
+  if (!shell) return;
+  Object.keys(petStates).forEach((key) => shell.classList.remove(`state-${key.replace(/_/g, "-")}`));
+}
+
+function applyPetAnimationState(stateKey) {
+  const shell = $("#petShell");
+  if (!shell) return;
+  clearPetAnimationState();
+  shell.classList.add(`state-${stateKey.replace(/_/g, "-")}`);
+}
+
+function applyMotionLevel(level = getMotionLevel()) {
+  const shell = $("#petShell");
+  if (!shell) return;
+  ["off", "subtle", "normal", "lively"].forEach((motionLevel) => shell.classList.remove(`motion-${motionLevel}`));
+  shell.classList.add(`motion-${["off", "subtle", "normal", "lively"].includes(level) ? level : "normal"}`);
+}
+
+function syncMotionSettings(settings = {}) {
+  const nextLevel = settings.kojiMotionLevel || (settings.animationsEnabled === false ? "off" : petSettings.kojiMotionLevel || "normal");
+  petSettings.kojiMotionLevel = ["off", "subtle", "normal", "lively"].includes(nextLevel) ? nextLevel : "normal";
+  petSettings.animationsEnabled = petSettings.kojiMotionLevel !== "off";
+  applyMotionLevel(petSettings.kojiMotionLevel);
+}
+
 function setPetState(stateKey, options = {}) {
   const normalizedOptions = typeof options === "number" ? { duration: options } : (options || {});
   const state = petStates[stateKey] || petStates.idle;
@@ -118,7 +151,11 @@ function setPetState(stateKey, options = {}) {
   const shell = $("#petShell");
 
   clearTimeout(petTimer);
-  shell.className = `pet-shell ${state.cssClass}`;
+  shell.classList.add("pet-shell");
+  Object.values(petStates).forEach((petState) => shell.classList.remove(petState.cssClass));
+  shell.classList.add(state.cssClass);
+  applyPetAnimationState(state.key);
+  applyMotionLevel();
   if (!normalizedOptions.silent) {
     setPetMessage(normalizedOptions.message || getDialogueForState(state.key));
   }
@@ -148,6 +185,8 @@ function loadPetSettings() {
       currentCharacter: stored.currentCharacter || "koji",
       currentSkin: stored.currentSkin || "default",
       lastHourlyChimeKey: stored.lastHourlyChimeKey || "",
+      kojiMotionLevel: stored.kojiMotionLevel || (stored.animationsEnabled === false ? "off" : "normal"),
+      animationsEnabled: stored.kojiMotionLevel ? stored.kojiMotionLevel !== "off" : stored.animationsEnabled !== false,
     };
   } catch (error) {
     return { ...defaultPetSettings };
@@ -158,7 +197,7 @@ function savePetSettings() {
   const stored = (() => {
     try { return JSON.parse(localStorage.getItem("kojiReportPet.settings") || "{}"); } catch (error) { return {}; }
   })();
-  localStorage.setItem("kojiReportPet.settings", JSON.stringify({ ...stored, ...petSettings, kojiTone: "default", dialogueTone: "default" }));
+  localStorage.setItem("kojiReportPet.settings", JSON.stringify({ ...stored, ...petSettings, animationsEnabled: petSettings.kojiMotionLevel !== "off", kojiTone: "default", dialogueTone: "default" }));
 }
 
 function applyPetSettings(nextSettings = {}) {
@@ -173,7 +212,9 @@ function applyPetSettings(nextSettings = {}) {
     currentCharacter: nextSettings.currentCharacter || petSettings.currentCharacter || "koji",
     currentSkin: nextSettings.currentSkin || petSettings.currentSkin || "default",
     lastHourlyChimeKey: nextSettings.lastHourlyChimeKey || petSettings.lastHourlyChimeKey || "",
+    kojiMotionLevel: nextSettings.kojiMotionLevel || (nextSettings.animationsEnabled === false ? "off" : petSettings.kojiMotionLevel || "normal"),
   };
+  syncMotionSettings(petSettings);
   savePetSettings();
   if (currentStateKey) setPetState(currentStateKey, { duration: currentStateKey === "idle" ? 0 : undefined });
 }
@@ -317,8 +358,9 @@ function bindManualDrag() {
     const totalX = event.screenX - dragInfo.x;
     const totalY = event.screenY - dragInfo.y;
     if (!dragInfo.moved && Math.hypot(totalX, totalY) < 5) return;
+    if (!dragInfo.moved) dragReturnStateKey = currentStateKey === "drag" ? "idle" : currentStateKey;
     dragInfo.moved = true;
-    if (currentStateKey !== "drag") setPetState("drag", 0);
+    if (currentStateKey !== "drag") setPetState("drag", { duration: 0 });
     const deltaX = event.screenX - dragInfo.lastX;
     const deltaY = event.screenY - dragInfo.lastY;
     dragInfo.lastX = event.screenX;
@@ -332,7 +374,8 @@ function bindManualDrag() {
     dragInfo = null;
     if (wasDragging) {
       suppressClickUntil = Date.now() + 260;
-      setPetState(quickRecordVisible ? "record_ready" : "idle");
+      setPetState(quickRecordVisible ? "record_ready" : (dragReturnStateKey === "drag" ? "idle" : dragReturnStateKey || "idle"));
+      dragReturnStateKey = "idle";
     }
   };
   body.addEventListener("pointerup", finishDrag);
@@ -395,6 +438,7 @@ function init() {
   });
   bindPetEvents();
   petSettings = loadPetSettings();
+  syncMotionSettings(petSettings);
   loadTags();
   window.kojiDesktop?.setPetWindowMode?.("compact");
   setPetState("idle");
