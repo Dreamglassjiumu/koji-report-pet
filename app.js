@@ -42,18 +42,19 @@ const categoryRules = [
 const issueKeywords = ["问题", "异常", "bug", "Bug", "BUG", "乱码", "失败", "修复", "排查", "报错", "阻塞", "错误"];
 
 const petStates = {
-  idle: { key: "idle", label: "待机", emoji: "🐾", image: "", message: "来了，今天干啥了？", cssClass: "pet-idle", duration: 0, soundHint: "" },
-  wave: { key: "wave", label: "打招呼", emoji: "👋", image: "", message: "嗨，我在右下角盯着日报。", cssClass: "pet-wave", duration: 1800, soundHint: "" },
-  record_ready: { key: "record_ready", label: "准备记录", emoji: "📝", image: "", message: "说吧，今天又干啥了？", cssClass: "pet-record-ready", duration: 2200, soundHint: "" },
-  success: { key: "success", label: "记录成功", emoji: "✅", image: "", message: "这条我记下了。", cssClass: "pet-success", duration: 2200, soundHint: "" },
-  thinking: { key: "thinking", label: "思考", emoji: "🤔", image: "", message: "我琢磨一下怎么归档。", cssClass: "pet-thinking", duration: 1800, soundHint: "" },
-  writing: { key: "writing", label: "写日报", emoji: "✍️", image: "", message: "日报我来写！", cssClass: "pet-writing", duration: 2400, soundHint: "" },
-  happy: { key: "happy", label: "开心", emoji: "🎉", image: "", message: "复制好了，去交差吧！", cssClass: "pet-happy", duration: 2400, soundHint: "" },
-  confused: { key: "confused", label: "疑惑", emoji: "😵‍💫", image: "", message: "今天还啥都没记呢！", cssClass: "pet-confused", duration: 2600, soundHint: "" },
-  angry: { key: "angry", label: "催日报", emoji: "😾", image: "", message: "你是不是又忘写日报了？", cssClass: "pet-angry", duration: 3000, soundHint: "" },
-  sleep: { key: "sleep", label: "困倦", emoji: "💤", image: "", message: "太晚了，日报写完就收工吧。", cssClass: "pet-sleep", duration: 2600, soundHint: "" },
-  drag: { key: "drag", label: "被拖动", emoji: "🌀", image: "", message: "别拎我耳朵，放这也行。", cssClass: "pet-drag", duration: 0, soundHint: "" },
-  error: { key: "error", label: "报错", emoji: "⚠️", image: "", message: "哎呀，本地保存或复制好像失败了。", cssClass: "pet-error", duration: 3200, soundHint: "" },
+  idle: { key: "idle", label: "待机", emoji: "🐾", image: "assets/koji/idle.png", message: "来了，今天干啥了？", cssClass: "pet-idle", duration: 0, soundHint: "" },
+  wave: { key: "wave", label: "打招呼", emoji: "👋", image: "assets/koji/wave.png", message: "嗨，我在右下角盯着日报。", cssClass: "pet-wave", duration: 1800, soundHint: "" },
+  record_ready: { key: "record_ready", label: "准备记录", emoji: "📝", image: "assets/koji/record_ready.png", message: "说吧，今天又干啥了？", cssClass: "pet-record-ready", duration: 2200, soundHint: "" },
+  collect: { key: "collect", label: "收集记录", emoji: "📥", image: "assets/koji/collect.png", message: "收到，已经收进日报素材库。", cssClass: "pet-collect", duration: 2400, soundHint: "" },
+  success: { key: "success", label: "通用成功", emoji: "✅", image: "assets/koji/success.png", message: "这条我记下了。", cssClass: "pet-success", duration: 2200, soundHint: "" },
+  thinking: { key: "thinking", label: "思考", emoji: "🤔", image: "assets/koji/thinking.png", message: "我琢磨一下怎么归档。", cssClass: "pet-thinking", duration: 1800, soundHint: "" },
+  writing: { key: "writing", label: "写日报", emoji: "✍️", image: "assets/koji/writing.png", message: "日报我来写！", cssClass: "pet-writing", duration: 2400, soundHint: "" },
+  happy: { key: "happy", label: "开心", emoji: "🎉", image: "assets/koji/happy.png", message: "复制好了，去交差吧！", cssClass: "pet-happy", duration: 2400, soundHint: "" },
+  confused: { key: "confused", label: "疑惑", emoji: "😵‍💫", image: "assets/koji/confused.png", message: "今天还啥都没记呢！", cssClass: "pet-confused", duration: 2600, soundHint: "" },
+  angry: { key: "angry", label: "催日报", emoji: "😾", image: "assets/koji/angry.png", message: "你是不是又忘写日报了？", cssClass: "pet-angry", duration: 3000, soundHint: "" },
+  sleep: { key: "sleep", label: "困倦", emoji: "💤", image: "assets/koji/sleep.png", message: "太晚了，日报写完就收工吧。", cssClass: "pet-sleep", duration: 2600, soundHint: "" },
+  drag: { key: "drag", label: "拖动", emoji: "🌀", image: "assets/koji/drag.png", message: "别拎我耳朵，放这也行。", cssClass: "pet-drag", duration: 0, soundHint: "" },
+  error: { key: "error", label: "报错", emoji: "⚠️", image: "assets/koji/error.png", message: "哎呀，本地保存或复制好像失败了。", cssClass: "pet-error", duration: 3200, soundHint: "" },
 };
 
 let records = {};
@@ -63,6 +64,7 @@ let selectedHistoryDate = "";
 let petTimer = null;
 let idleTimer = null;
 let toastIndex = 0;
+let isApplyingDesktopPetState = false;
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -84,6 +86,7 @@ function init() {
   makePetDraggable();
   applyPetMinimized();
   setPetState("wave");
+  setupDesktopBridge();
   setupIdleWatcher();
 }
 
@@ -330,6 +333,7 @@ function renderSettings() {
     <div class="setting-box wide-setting">
       <h3>Koji 动作测试面板</h3>
       <div id="petActionTester" class="pet-action-grid"></div>
+      <div id="petAssetChecklist" class="pet-asset-checklist"></div>
     </div>
     <div class="setting-box danger-zone">
       <h3>危险操作</h3>
@@ -351,6 +355,31 @@ function renderPetActionTester() {
   if (!panel) return;
   panel.innerHTML = Object.values(petStates).map((state) => `<button type="button" class="tiny-btn" data-state="${state.key}">${state.emoji} ${state.label}</button>`).join("");
   panel.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setPetState(button.dataset.state)));
+  const checklist = $("#petAssetChecklist");
+  if (checklist) {
+    checklist.innerHTML = `<strong>素材命名检查</strong>${Object.values(petStates).map((state) => `<code>assets/koji/${state.key}.png</code><code>assets/koji/${state.key}.webp</code><code>assets/koji/${state.key}.gif</code>`).join("")}`;
+  }
+}
+
+function createRecord(text, tag) {
+  const now = new Date();
+  return {
+    id: `${now.getTime()}-${Math.random().toString(16).slice(2)}`,
+    text,
+    tag,
+    time: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+    createdAt: now.getTime(),
+  };
+}
+
+function persistRecord(text, tag) {
+  const today = getTodayKey();
+  const record = createRecord(text, tag || "默认");
+  records[today] = [...(records[today] || []), record];
+  if (!saveRecords()) return null;
+  renderTodayRecords();
+  renderHistory();
+  return record;
 }
 
 function addRecord() {
@@ -361,17 +390,25 @@ function addRecord() {
     setPetState("confused");
     return;
   }
-  const today = getTodayKey();
-  const now = new Date();
-  const record = { id: String(Date.now()), text, tag, time: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`, createdAt: now.getTime() };
-  records[today] = [...(records[today] || []), record];
-  if (saveRecords()) {
+  if (persistRecord(text, tag)) {
     $("#recordText").value = "";
-    renderTodayRecords();
-    renderHistory();
     showToast("添加成功，Koji 记下来了。", "success");
     setPetState("success");
   }
+}
+
+function addRecordFromPet(text, tag = "公司工作") {
+  const cleanText = String(text || "").trim();
+  if (!cleanText) {
+    showToast("你还什么都没说呢。", "warning");
+    setPetState("confused");
+    return { ok: false, message: "你还什么都没说呢。" };
+  }
+  const record = persistRecord(cleanText, tag || "公司工作");
+  if (!record) return { ok: false, message: "保存失败。" };
+  showToast("Koji 快速记录成功。", "success");
+  setPetState("collect");
+  return { ok: true, record };
 }
 
 function editRecord(id) {
@@ -505,6 +542,7 @@ function exportReportTxt() {
   if (!content) return warnEmptyReport();
   downloadTextFile(`koji-report-${getTodayKey()}.txt`, content);
   showToast("TXT 已导出。", "success");
+  setPetState("success");
 }
 
 function exportReportMarkdown() {
@@ -513,6 +551,7 @@ function exportReportMarkdown() {
   const markdown = buildMarkdown(getTodayKey(), content, records[getTodayKey()] || []);
   downloadTextFile(`koji-report-${getTodayKey()}.md`, markdown);
   showToast("Markdown 已导出。", "success");
+  setPetState("success");
 }
 
 function downloadTextFile(filename, content) {
@@ -584,9 +623,36 @@ function formatRecordText(record) {
   return `${record.time ? `${record.time} ` : ""}${record.tag && record.tag !== "默认" ? `【${record.tag}】` : ""}${text}`;
 }
 
+function getPetAssetCandidates(state) {
+  return ["png", "webp", "gif"].map((ext) => `assets/koji/${state.key}.${ext}`);
+}
+
+function renderPetFace(face, state) {
+  const candidates = getPetAssetCandidates(state);
+  let index = 0;
+  const tryNext = () => {
+    if (index >= candidates.length) {
+      face.textContent = state.emoji;
+      return;
+    }
+    const img = new Image();
+    img.alt = state.label;
+    img.onload = () => {
+      face.innerHTML = "";
+      face.appendChild(img);
+    };
+    img.onerror = () => {
+      index += 1;
+      tryNext();
+    };
+    img.src = candidates[index];
+  };
+  tryNext();
+}
+
 function setPetState(stateKey, overrideDuration) {
   const state = petStates[stateKey] || petStates.idle;
-  window.kojiDesktop?.setPetState?.(state.key);
+  if (!isApplyingDesktopPetState) window.kojiDesktop?.setPetState?.(state.key);
   const pet = $("#kojiPet");
   const face = $("#petFace");
   const avatar = $("#petAvatar");
@@ -596,11 +662,7 @@ function setPetState(stateKey, overrideDuration) {
   $("#petLabel").textContent = state.label;
   $("#petMiniButton").textContent = state.emoji;
   avatar.className = `pet-avatar ${state.cssClass}`;
-  if (state.image) {
-    face.innerHTML = `<img src="${state.image}" alt="${state.label}" onerror="this.replaceWith(document.createTextNode('${state.emoji}'))">`;
-  } else {
-    face.textContent = state.emoji;
-  }
+  renderPetFace(face, state);
   const duration = typeof overrideDuration === "number" ? overrideDuration : state.duration;
   if (duration > 0 && state.key !== "idle") {
     petTimer = setTimeout(() => setPetState("idle"), duration);
@@ -768,6 +830,48 @@ function togglePetMinimized() {
 function applyPetMinimized() {
   $("#kojiPet").classList.toggle("pet-minimized", Boolean(settings.petMinimized));
   $("#petToggleBtn").textContent = settings.petMinimized ? "展开" : "收起";
+}
+
+function setupDesktopBridge() {
+  window.kojiDesktop?.onQuickRecord?.((payload) => {
+    const result = addRecordFromPet(payload?.text, payload?.tag);
+    window.kojiDesktop?.sendQuickRecordResult?.(payload?.id, result);
+  });
+  window.kojiDesktop?.onDesktopCommand?.((command) => handleDesktopCommand(command));
+  window.kojiDesktop?.onPetStateChanged?.((state) => {
+    if (!petStates[state]) return;
+    isApplyingDesktopPetState = true;
+    setPetState(state);
+    isApplyingDesktopPetState = false;
+  });
+}
+
+function handleDesktopCommand(command) {
+  const actions = {
+    "focus-today": () => scrollToSection("todayRecordTitle"),
+    "focus-settings": () => scrollToSection("settingsTitle"),
+    "generate-report": generateReport,
+    "copy-report": () => copyReport($("#reportOutput").value),
+    "copy-gpt-prompt": copyGptPrompt,
+    "export-txt": exportReportTxt,
+    "export-markdown": exportReportMarkdown,
+    "generate-brief": generateBrief,
+    "generate-weekly": generateWeeklyMaterial,
+  };
+  if (!actions[command]) return;
+  try {
+    actions[command]();
+  } catch (error) {
+    console.error("桌宠命令执行失败", command, error);
+    showToast("桌宠命令执行失败。", "error");
+    setPetState("error");
+  }
+}
+
+function scrollToSection(id) {
+  const target = $(`#${id}`);
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function setupIdleWatcher() {
