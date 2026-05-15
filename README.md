@@ -2,9 +2,9 @@
 
 Koji Report Pet（中文名：Koji 日报桌宠助手）是一个纯本地的文案组日报桌宠助手。它面向日常工作记录场景：白天随手记录“今天做了什么”，晚上由本地模板和关键词规则整理生成中文日报。
 
-当前版本：**Koji Report Pet v0.5 角色台词与皮肤基础版**。
+当前版本：**Koji Report Pet v0.5.1 Koji 台词库接入版**。
 
-v0.5 在 v0.4.1 Electron 桌宠交互基础上，把 Koji 升级为有角色人格、有随机台词、有整点报时、有素材检测、有角色/皮肤扩展雏形的桌宠角色系统。
+v0.5.1 在 v0.5 角色台词与皮肤基础版之上，将 `docs/koji-dialogue-library.md` 整理为程序可读取的 `data/koji-dialogues.js`，让独立 Koji 桌宠根据状态、语气风格、整点报时和用户操作显示更丰富的本地台词。
 
 ## 运行方式
 
@@ -43,6 +43,16 @@ http://localhost:48763
 网页预览不依赖 `window.kojiDesktop`，没有 Electron IPC 时不会报错；右下角网页 Koji 会作为降级体验保留。Electron 桌面版则隐藏网页 Koji，避免主窗口和独立桌宠同时抢视觉。
 
 
+## v0.5.1 新增内容
+
+- 新增 `data/koji-dialogues.js`，使用普通全局变量暴露 `KOJI_DIALOGUES`、`KOJI_HOURLY_DIALOGUES`、`KOJI_MEME_SAFE_POOL` 和 `KOJI_DIALOGUE_META`，兼容 Electron renderer 与普通浏览器预览。
+- 正式接入 Koji 台词库：13 个状态在进入时会按当前语气模式随机抽取状态台词，并保留状态默认文案兜底。
+- 支持 5 种 Koji 语气风格：标准 Koji、更贱一点、更正经一点、中英日混合、少说话模式；设置会保存到本地并通过 Electron IPC 同步到独立桌宠窗口。
+- 支持整点报时文字气泡：默认关闭，只显示 Koji 气泡，不播放真实语音、不使用系统通知；同一小时只提示一次，快速记录框打开时不会打断输入。
+- 支持抽象梗安全池低频混入：仅在 `sassy` 模式的部分状态中以低概率出现，不用于 `formal` / `quiet`，也不会替代错误提示。
+- 优化独立桌宠气泡换行、高度和快速记录框同时显示时的占位，避免长台词撑破窗口或遮挡输入。
+- 保留 `docs/koji-dialogue-library.md` 作为台词源文档；程序实际读取 `data/koji-dialogues.js`。
+
 ## v0.5 新增内容
 
 - 新增 `koji-config.js` 统一配置 Koji 角色、13 个状态、台词池、整点报时台词、语气风格和皮肤基础结构。
@@ -56,7 +66,7 @@ http://localhost:48763
 
 ## Koji 角色人格与台词
 
-Koji 在 v0.5 中不是严肃办公助手，而是文案组吉祥物：会耍宝、会轻微吐槽、会用中文 + English + 简单日语混合说怪话，但关键功能反馈保持清楚。角色规范见 [`docs/koji-character-spec.md`](docs/koji-character-spec.md)。
+Koji 在 v0.5 中不是严肃办公助手，而是文案组吉祥物：会耍宝、会轻微吐槽、会用中文 + English + 简单日语混合说怪话，但关键功能反馈保持清楚。角色规范见 [`docs/koji-character-spec.md`](docs/koji-character-spec.md)，台词源文档见 [`docs/koji-dialogue-library.md`](docs/koji-dialogue-library.md)。
 
 语气风格会保存在 `kojiReportPet.settings` 中，并通过 Electron IPC 同步到独立桌宠窗口；普通浏览器预览没有 IPC 时会安全降级。
 
@@ -155,13 +165,15 @@ preload.js              # 安全暴露 window.kojiDesktop API
 index.html              # 主窗口页面结构：日报记录、生成、历史、设置和网页预览 Koji
 styles.css              # 主窗口样式：暖色 UI、卡片、按钮、响应式、Toast 和网页 Koji 预览
 app.js                  # 主窗口逻辑：localStorage、事项 CRUD、日报生成、导出、设置、历史记录和桌宠命令处理
-koji-config.js          # Koji 状态、随机台词池、语气风格、整点报时、角色/皮肤配置雏形
+koji-config.js          # Koji 状态、台词读取兜底、语气风格、整点报时、角色/皮肤配置雏形
+data/koji-dialogues.js  # v0.5.1 程序可读取台词配置：状态台词、整点报时、安全梗池和元信息
 pet.html                # 独立桌宠窗口结构和快速记录表单
 pet.css                 # 独立桌宠窗口透明 UI、拖动区域、快速记录面板和状态动画
 pet.js                  # 独立桌宠窗口状态配置、快速记录、右键菜单触发、双击打开面板和 IPC 移动
 README.md               # 项目说明
 assets/koji/README.md   # Koji 桌宠素材目录说明
 docs/koji-character-spec.md # Koji 角色设定与桌宠规范
+docs/koji-dialogue-library.md # Koji 台词源文档，整理依据与禁用方向
 ```
 
 ## 后续方向

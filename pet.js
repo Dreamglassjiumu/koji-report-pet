@@ -2,7 +2,7 @@ const defaultTags = ["默认", "Project：X", "毛茸茸骑士", "公司工作",
 const kojiConfig = window.KojiConfig;
 const stateOrder = kojiConfig.stateOrder;
 const petStates = kojiConfig.petStates;
-const defaultPetSettings = { kojiTone: "standard", hourlyChimeEnabled: false, currentCharacter: "koji", currentSkin: "default", lastHourlyChimeKey: "" };
+const defaultPetSettings = { kojiTone: "standard", dialogueTone: "standard", hourlyChimeEnabled: false, currentCharacter: "koji", currentSkin: "default", lastHourlyChimeKey: "" };
 
 const $ = (selector) => document.querySelector(selector);
 let petTimer = null;
@@ -61,22 +61,72 @@ function renderFace(state) {
   tryNext();
 }
 
-function setBubble(message) {
-  $("#petBubble").textContent = message;
+function pickRandom(list) {
+  return kojiConfig.pickRandom?.(list) || (Array.isArray(list) && list.length ? list[Math.floor(Math.random() * list.length)] : "");
 }
 
-function setPetState(stateKey, overrideDuration) {
+function getCurrentTone() {
+  return kojiConfig.normalizeTone(petSettings.dialogueTone || petSettings.kojiTone);
+}
+
+function maybePickMemeLine(stateKey, tone) {
+  const memeStates = new Set(["collect", "happy", "angry", "writing", "wave"]);
+  if (tone !== "sassy" || !memeStates.has(stateKey)) return null;
+  if (Math.random() > 0.12) return null;
+  return pickRandom(kojiConfig.memeSafePool || window.KOJI_MEME_SAFE_POOL || []);
+}
+
+function getDialogueForState(stateKey) {
+  const tone = getCurrentTone();
+  const memeLine = maybePickMemeLine(stateKey, tone);
+  if (memeLine) return memeLine;
+  const pool = kojiConfig.getDialoguePool?.(stateKey, tone)
+    || window.KOJI_DIALOGUES?.[tone]?.[stateKey]
+    || window.KOJI_DIALOGUES?.standard?.[stateKey]
+    || [];
+  const state = petStates[stateKey] || petStates.idle;
+  return pickRandom(pool) || state.message || "Koji 在。";
+}
+
+function getHourlyDialogue(hour) {
+  const tone = getCurrentTone();
+  const pool = kojiConfig.getHourlyPool?.(hour, tone)
+    || window.KOJI_HOURLY_DIALOGUES?.[tone]?.[String(hour).padStart(2, "0")]
+    || window.KOJI_HOURLY_DIALOGUES?.standard?.[String(hour).padStart(2, "0")]
+    || [];
+  return pickRandom(pool) || `现在是 ${Number(hour)} 点，Koji 提醒你记一下今日素材。`;
+}
+
+function truncatePetMessage(message) {
+  const text = String(message || "Koji 在。").trim();
+  const maxLength = getCurrentTone() === "quiet" ? 24 : 58;
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
+
+function setPetMessage(message) {
+  const bubble = $("#petBubble");
+  if (bubble) bubble.textContent = truncatePetMessage(message);
+}
+
+function setBubble(message) {
+  setPetMessage(message);
+}
+
+function setPetState(stateKey, options = {}) {
+  const normalizedOptions = typeof options === "number" ? { duration: options } : (options || {});
   const state = petStates[stateKey] || petStates.idle;
   currentStateKey = state.key;
   const shell = $("#petShell");
 
   clearTimeout(petTimer);
   shell.className = `pet-shell ${state.cssClass}`;
-  setBubble(kojiConfig.getDialogue(state.key, petSettings.kojiTone, state.message));
+  if (!normalizedOptions.silent) {
+    setPetMessage(normalizedOptions.message || getDialogueForState(state.key));
+  }
   $("#petLabel").textContent = state.label;
   renderFace(state);
 
-  const duration = typeof overrideDuration === "number" ? overrideDuration : state.duration;
+  const duration = typeof normalizedOptions.duration === "number" ? normalizedOptions.duration : state.duration;
   if (duration > 0 && state.key !== "idle") {
     petTimer = setTimeout(() => setPetState("idle"), duration);
   }
@@ -90,10 +140,12 @@ function sendPetState(state) {
 function loadPetSettings() {
   try {
     const stored = JSON.parse(localStorage.getItem("kojiReportPet.settings") || "{}");
+    const normalizedTone = kojiConfig.normalizeTone(stored.dialogueTone || stored.kojiTone);
     return {
       ...defaultPetSettings,
       ...stored,
-      kojiTone: kojiConfig.normalizeTone(stored.kojiTone),
+      kojiTone: normalizedTone,
+      dialogueTone: normalizedTone,
       hourlyChimeEnabled: Boolean(stored.hourlyChimeEnabled),
       currentCharacter: stored.currentCharacter || "koji",
       currentSkin: stored.currentSkin || "default",
@@ -108,14 +160,16 @@ function savePetSettings() {
   const stored = (() => {
     try { return JSON.parse(localStorage.getItem("kojiReportPet.settings") || "{}"); } catch (error) { return {}; }
   })();
-  localStorage.setItem("kojiReportPet.settings", JSON.stringify({ ...stored, ...petSettings }));
+  localStorage.setItem("kojiReportPet.settings", JSON.stringify({ ...stored, ...petSettings, kojiTone: getCurrentTone(), dialogueTone: getCurrentTone() }));
 }
 
 function applyPetSettings(nextSettings = {}) {
+  const normalizedTone = kojiConfig.normalizeTone(nextSettings.dialogueTone || nextSettings.kojiTone || petSettings.dialogueTone || petSettings.kojiTone);
   petSettings = {
     ...petSettings,
     ...nextSettings,
-    kojiTone: kojiConfig.normalizeTone(nextSettings.kojiTone || petSettings.kojiTone),
+    kojiTone: normalizedTone,
+    dialogueTone: normalizedTone,
     hourlyChimeEnabled: Object.prototype.hasOwnProperty.call(nextSettings, "hourlyChimeEnabled")
       ? Boolean(nextSettings.hourlyChimeEnabled)
       : petSettings.hourlyChimeEnabled,
@@ -123,7 +177,8 @@ function applyPetSettings(nextSettings = {}) {
     currentSkin: nextSettings.currentSkin || petSettings.currentSkin || "default",
     lastHourlyChimeKey: nextSettings.lastHourlyChimeKey || petSettings.lastHourlyChimeKey || "",
   };
-  if (currentStateKey) setPetState(currentStateKey, currentStateKey === "idle" ? 0 : undefined);
+  savePetSettings();
+  if (currentStateKey) setPetState(currentStateKey, { duration: currentStateKey === "idle" ? 0 : undefined });
 }
 
 function getChimeState(hour) {
@@ -133,29 +188,49 @@ function getChimeState(hour) {
   return "wave";
 }
 
-function checkHourlyChime() {
-  if (!petSettings.hourlyChimeEnabled || petSettings.kojiTone === "quiet") return;
-  const now = new Date();
-  if (now.getMinutes() !== 0) return;
-  const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}`;
-  if (petSettings.lastHourlyChimeKey === key) return;
-  petSettings.lastHourlyChimeKey = key;
-  savePetSettings();
-  if (quickRecordVisible) return;
-  const state = petStates[getChimeState(now.getHours())] || petStates.wave;
-  clearTimeout(petTimer);
-  currentStateKey = state.key;
-  $("#petShell").className = `pet-shell ${state.cssClass}`;
-  setBubble(kojiConfig.getHourlyLine(now.getHours(), petSettings.kojiTone));
-  $("#petLabel").textContent = `${state.label} · 整点报时`;
-  renderFace(state);
-  petTimer = setTimeout(() => setPetState("idle"), 7000);
+function getHourlyChimeKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}-${String(date.getHours()).padStart(2, "0")}`;
 }
 
-function setupHourlyChime() {
+function shouldSkipHourlyChime() {
+  return quickRecordVisible;
+}
+
+function markHourlyChimeShown(key) {
+  petSettings.lastHourlyChimeKey = key;
+  savePetSettings();
+}
+
+function checkHourlyChime() {
+  if (!petSettings.hourlyChimeEnabled) return;
+  const now = new Date();
+  if (now.getMinutes() !== 0) return;
+  const key = getHourlyChimeKey(now);
+  if (petSettings.lastHourlyChimeKey === key) return;
+  markHourlyChimeShown(key);
+  if (shouldSkipHourlyChime()) return;
+  const state = petStates[getChimeState(now.getHours())] || petStates.wave;
+  setPetState(state.key, {
+    message: getHourlyDialogue(now.getHours()),
+    duration: getCurrentTone() === "quiet" ? 5200 : 7600,
+  });
+  $("#petLabel").textContent = `${state.label} · 整点报时`;
+}
+
+function startHourlyChimeTimer() {
   clearInterval(hourlyTimer);
   checkHourlyChime();
   hourlyTimer = setInterval(checkHourlyChime, 30000);
+}
+
+function stopHourlyChimeTimer() {
+  clearInterval(hourlyTimer);
+  hourlyTimer = null;
+}
+
+function setupHourlyChime() {
+  if (petSettings.hourlyChimeEnabled) startHourlyChimeTimer();
+  else stopHourlyChimeTimer();
 }
 
 function loadTags() {
