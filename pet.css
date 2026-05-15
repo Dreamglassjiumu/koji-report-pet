@@ -113,7 +113,8 @@ button {
   filter: none !important;
   backdrop-filter: none !important;
   overflow: visible;
-  animation: koji-breathe 2.4s ease-in-out infinite;
+  transform-origin: center bottom;
+  will-change: transform;
   touch-action: none;
 }
 
@@ -272,25 +273,215 @@ button {
 
 #quickSubmitBtn { color: white; background: linear-gradient(135deg, #ff8f68, #dc5f38); border-color: transparent; }
 
-.pet-wave .pet-body { animation: koji-wave 0.7s ease-in-out infinite; }
-.pet-success .pet-body,
-.pet-collect .pet-body,
-.pet-happy .pet-body { animation: koji-pop 0.8s ease-in-out infinite; }
-.pet-thinking .pet-body,
-.pet-writing .pet-body,
-.pet-record-ready .pet-body { animation: koji-wiggle 1s ease-in-out infinite; }
-.pet-angry .pet-body,
-.pet-error .pet-body { animation: koji-shake 0.35s ease-in-out infinite; }
-.pet-sleep .pet-body { animation: koji-sleep 2s ease-in-out infinite; }
-.pet-drag .pet-body { animation: koji-drag 0.55s ease-in-out infinite; }
+.pet-shell {
+  --koji-motion-scale: 1;
+  --koji-motion-duration-multiplier: 1;
+  --koji-n1px: -1px; --koji-p1px: 1px;
+  --koji-n2px: -2px; --koji-p2px: 2px;
+  --koji-n3px: -3px; --koji-p3px: 3px;
+  --koji-n5px: -5px; --koji-p5px: 5px;
+  --koji-n7px: -7px; --koji-p7px: 7px;
+  --koji-n8px: -8px; --koji-p8px: 8px; --koji-p9px: 9px;
+  --koji-n10px: -10px;
+  --koji-n16px: -16px;
+  --koji-n05deg: -0.5deg; --koji-n08deg: -0.8deg; --koji-n1deg: -1deg; --koji-p1deg: 1deg;
+  --koji-n13deg: -1.3deg; --koji-p13deg: 1.3deg;
+  --koji-n14deg: -1.4deg; --koji-p14deg: 1.4deg;
+  --koji-n15deg: -1.5deg; --koji-p15deg: 1.5deg;
+  --koji-n16deg: -1.6deg;
+  --koji-n2deg: -2deg; --koji-p2deg: 2deg;
+  --koji-n25deg: -2.5deg; --koji-p25deg: 2.5deg;
+  --koji-n3deg: -3deg; --koji-p3deg: 3deg;
+  --koji-n4deg: -4deg; --koji-p4deg: 4deg;
+  --koji-n5deg: -5deg; --koji-p5deg: 5deg;
+  --koji-n6deg: -6deg; --koji-p6deg: 6deg;
+  --koji-n7deg: -7deg; --koji-p7deg: 7deg;
+  --koji-p8deg: 8deg;
+}
 
-@keyframes koji-breathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.02); } }
-@keyframes koji-wave { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(10deg) scale(1.08); } }
-@keyframes koji-pop { 0% { transform: scale(0.92); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
-@keyframes koji-wiggle { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
-@keyframes koji-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-@keyframes koji-sleep { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
-@keyframes koji-drag { 0%, 100% { transform: rotate(-5deg) scale(1.02); } 50% { transform: rotate(5deg) scale(1.05); } }
+.pet-shell.motion-subtle {
+  --koji-motion-scale: 0.55;
+  --koji-motion-duration-multiplier: 1.18;
+  --koji-n1px: -0.5px; --koji-p1px: 0.5px;
+  --koji-n2px: -1px; --koji-p2px: 1px;
+  --koji-n3px: -1.5px; --koji-p3px: 1.5px;
+  --koji-n5px: -2.5px; --koji-p5px: 2.5px;
+  --koji-n7px: -4px; --koji-p7px: 4px;
+  --koji-n8px: -4.5px; --koji-p8px: 4.5px; --koji-p9px: 5px;
+  --koji-n10px: -5.5px;
+  --koji-n16px: -9px;
+  --koji-n05deg: -0.25deg; --koji-n08deg: -0.45deg; --koji-n1deg: -0.55deg; --koji-p1deg: 0.55deg;
+  --koji-n13deg: -0.7deg; --koji-p13deg: 0.7deg;
+  --koji-n14deg: -0.8deg; --koji-p14deg: 0.8deg;
+  --koji-n15deg: -0.8deg; --koji-p15deg: 0.8deg;
+  --koji-n16deg: -0.9deg;
+  --koji-n2deg: -1.1deg; --koji-p2deg: 1.1deg;
+  --koji-n25deg: -1.4deg; --koji-p25deg: 1.4deg;
+  --koji-n3deg: -1.65deg; --koji-p3deg: 1.65deg;
+  --koji-n4deg: -2.2deg; --koji-p4deg: 2.2deg;
+  --koji-n5deg: -2.75deg; --koji-p5deg: 2.75deg;
+  --koji-n6deg: -3.3deg; --koji-p6deg: 3.3deg;
+  --koji-n7deg: -3.85deg; --koji-p7deg: 3.85deg;
+  --koji-p8deg: 4.4deg;
+}
+
+.pet-shell.motion-normal {
+  --koji-motion-scale: 1;
+  --koji-motion-duration-multiplier: 1;
+  --koji-n1px: -1px; --koji-p1px: 1px;
+  --koji-n2px: -2px; --koji-p2px: 2px;
+  --koji-n3px: -3px; --koji-p3px: 3px;
+  --koji-n5px: -5px; --koji-p5px: 5px;
+  --koji-n7px: -7px; --koji-p7px: 7px;
+  --koji-n8px: -8px; --koji-p8px: 8px; --koji-p9px: 9px;
+  --koji-n10px: -10px;
+  --koji-n16px: -16px;
+  --koji-n05deg: -0.5deg; --koji-n08deg: -0.8deg; --koji-n1deg: -1deg; --koji-p1deg: 1deg;
+  --koji-n13deg: -1.3deg; --koji-p13deg: 1.3deg;
+  --koji-n14deg: -1.4deg; --koji-p14deg: 1.4deg;
+  --koji-n15deg: -1.5deg; --koji-p15deg: 1.5deg;
+  --koji-n16deg: -1.6deg;
+  --koji-n2deg: -2deg; --koji-p2deg: 2deg;
+  --koji-n25deg: -2.5deg; --koji-p25deg: 2.5deg;
+  --koji-n3deg: -3deg; --koji-p3deg: 3deg;
+  --koji-n4deg: -4deg; --koji-p4deg: 4deg;
+  --koji-n5deg: -5deg; --koji-p5deg: 5deg;
+  --koji-n6deg: -6deg; --koji-p6deg: 6deg;
+  --koji-n7deg: -7deg; --koji-p7deg: 7deg;
+  --koji-p8deg: 8deg;
+}
+
+.pet-shell.motion-lively {
+  --koji-motion-scale: 1.32;
+  --koji-motion-duration-multiplier: 0.86;
+  --koji-n1px: -1.3px; --koji-p1px: 1.3px;
+  --koji-n2px: -2.6px; --koji-p2px: 2.6px;
+  --koji-n3px: -4px; --koji-p3px: 4px;
+  --koji-n5px: -6.6px; --koji-p5px: 6.6px;
+  --koji-n7px: -9px; --koji-p7px: 9px;
+  --koji-n8px: -10.5px; --koji-p8px: 10.5px; --koji-p9px: 12px;
+  --koji-n10px: -13px;
+  --koji-n16px: -20px;
+  --koji-n05deg: -0.7deg; --koji-n08deg: -1.05deg; --koji-n1deg: -1.3deg; --koji-p1deg: 1.3deg;
+  --koji-n13deg: -1.7deg; --koji-p13deg: 1.7deg;
+  --koji-n14deg: -1.85deg; --koji-p14deg: 1.85deg;
+  --koji-n15deg: -2deg; --koji-p15deg: 2deg;
+  --koji-n16deg: -2.1deg;
+  --koji-n2deg: -2.6deg; --koji-p2deg: 2.6deg;
+  --koji-n25deg: -3.3deg; --koji-p25deg: 3.3deg;
+  --koji-n3deg: -4deg; --koji-p3deg: 4deg;
+  --koji-n4deg: -5.3deg; --koji-p4deg: 5.3deg;
+  --koji-n5deg: -6.6deg; --koji-p5deg: 6.6deg;
+  --koji-n6deg: -8deg; --koji-p6deg: 8deg;
+  --koji-n7deg: -9.2deg; --koji-p7deg: 9.2deg;
+  --koji-p8deg: 10.5deg;
+}
+
+.pet-shell.motion-off .pet-body { animation: none !important; }
+
+.state-idle .pet-body { animation: koji-idle-bob 3.4s ease-in-out infinite; }
+.state-wave .pet-body { animation: koji-wave-sway 1.45s ease-in-out infinite; }
+.state-record-ready .pet-body { animation: koji-record-ready-nod 1.65s ease-in-out infinite; }
+.state-collect .pet-body { animation: koji-collect-pop 1.08s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.state-success .pet-body { animation: koji-success-bounce 1.15s ease-out infinite; }
+.state-thinking .pet-body { animation: koji-thinking-tilt 2.25s ease-in-out infinite; }
+.state-writing .pet-body { animation: koji-writing-jitter 0.34s steps(2, end) infinite; }
+.state-happy .pet-body { animation: koji-happy-jump 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
+.state-confused .pet-body { animation: koji-confused-wobble 1.85s ease-in-out infinite; }
+.state-angry .pet-body { animation: koji-angry-shake 0.48s ease-in-out infinite; }
+.state-sleep .pet-body { animation: koji-sleep-nod 3.1s ease-in-out infinite; }
+.state-drag .pet-body { animation: koji-drag-flail 0.42s ease-in-out infinite; }
+.state-error .pet-body { animation: koji-error-shake 0.85s ease-in-out infinite; }
+
+@keyframes koji-idle-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(var(--koji-n2px)) rotate(var(--koji-n1deg)) scale(1.005); }
+  50% { transform: translateY(var(--koji-n5px)) rotate(var(--koji-p1deg)) scale(1.015); }
+  75% { transform: translateY(var(--koji-n2px)) rotate(var(--koji-n05deg)) scale(1.006); }
+}
+
+@keyframes koji-wave-sway {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  20% { transform: translateY(var(--koji-n3px)) rotate(var(--koji-n5deg)) scale(1.02); }
+  45% { transform: translateY(var(--koji-n7px)) rotate(var(--koji-p7deg)) scale(1.04); }
+  70% { transform: translateY(var(--koji-n2px)) rotate(var(--koji-n3deg)) scale(1.02); }
+}
+
+@keyframes koji-record-ready-nod {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  40% { transform: translateY(var(--koji-p3px)) rotate(var(--koji-p25deg)) scale(1.025); }
+  65% { transform: translateY(var(--koji-n2px)) rotate(var(--koji-n1deg)) scale(1.01); }
+}
+
+@keyframes koji-collect-pop {
+  0% { transform: scale(1) translateY(0); }
+  30% { transform: scale(1.06) translateY(var(--koji-n3px)); }
+  62% { transform: scale(0.97) translateY(var(--koji-p2px)); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes koji-success-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  28% { transform: translateY(var(--koji-n10px)) scale(1.04); }
+  48% { transform: translateY(0) scale(0.985); }
+  68% { transform: translateY(var(--koji-n5px)) scale(1.02); }
+}
+
+@keyframes koji-thinking-tilt {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  35% { transform: rotate(var(--koji-n5deg)) translateY(var(--koji-n2px)); }
+  70% { transform: rotate(var(--koji-p4deg)) translateY(var(--koji-n1px)); }
+}
+
+@keyframes koji-writing-jitter {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(var(--koji-n2px), var(--koji-p1px)) rotate(var(--koji-n16deg)); }
+  50% { transform: translate(var(--koji-p2px), var(--koji-n1px)) rotate(var(--koji-p13deg)); }
+  75% { transform: translate(var(--koji-n1px), var(--koji-n1px)) rotate(var(--koji-n08deg)); }
+}
+
+@keyframes koji-happy-jump {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  30% { transform: translateY(var(--koji-n16px)) rotate(var(--koji-n3deg)) scale(1.055); }
+  55% { transform: translateY(0) rotate(var(--koji-p2deg)) scale(0.98); }
+  76% { transform: translateY(var(--koji-n7px)) rotate(var(--koji-p3deg)) scale(1.025); }
+}
+
+@keyframes koji-confused-wobble {
+  0%, 100% { transform: rotate(0deg) translateY(0) scale(1); }
+  30% { transform: rotate(var(--koji-n7deg)) translateY(var(--koji-p2px)) scale(0.995); }
+  62% { transform: rotate(var(--koji-p6deg)) translateY(var(--koji-n1px)) scale(1.01); }
+}
+
+@keyframes koji-angry-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+  24% { transform: translateX(var(--koji-n3px)) rotate(var(--koji-n1deg)) scale(1.01); }
+  52% { transform: translateX(var(--koji-p5px)) rotate(var(--koji-p14deg)) scale(1.025); }
+  76% { transform: translateX(var(--koji-n2px)) rotate(var(--koji-n08deg)) scale(1.01); }
+}
+
+@keyframes koji-sleep-nod {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  42% { transform: translateY(var(--koji-p7px)) rotate(var(--koji-p4deg)); }
+  58% { transform: translateY(var(--koji-p9px)) rotate(var(--koji-p5deg)); }
+  75% { transform: translateY(var(--koji-p2px)) rotate(var(--koji-n1deg)); }
+}
+
+@keyframes koji-drag-flail {
+  0%, 100% { transform: translateY(var(--koji-n3px)) rotate(var(--koji-n7deg)) scale(1.025); }
+  25% { transform: translate(var(--koji-p3px), var(--koji-n7px)) rotate(var(--koji-p8deg)) scale(1.04); }
+  50% { transform: translate(var(--koji-n2px), var(--koji-n5px)) rotate(var(--koji-n5deg)) scale(1.03); }
+  75% { transform: translate(var(--koji-p2px), var(--koji-n8px)) rotate(var(--koji-p6deg)) scale(1.045); }
+}
+
+@keyframes koji-error-shake {
+  0%, 18%, 55%, 100% { transform: translateX(0) rotate(0deg); }
+  24% { transform: translateX(var(--koji-n3px)) rotate(var(--koji-n15deg)); }
+  30% { transform: translateX(var(--koji-p3px)) rotate(var(--koji-p15deg)); }
+  36% { transform: translateX(var(--koji-n2px)) rotate(var(--koji-n1deg)); }
+  42% { transform: translateX(var(--koji-p2px)) rotate(var(--koji-p1deg)); }
+}
+
 .pet-bubble {
   max-width: min(100%, 252px);
   overflow-wrap: anywhere;
