@@ -21,6 +21,7 @@ const defaultSettings = {
   petMinimized: false,
   reportFormat: { ...defaultReportFormat },
   kojiTone: "standard",
+  dialogueTone: "standard",
   hourlyChimeEnabled: false,
   currentCharacter: "koji",
   currentSkin: "default",
@@ -158,7 +159,8 @@ function loadSettings() {
     ...defaultSettings,
     ...stored,
     reportFormat: { ...defaultReportFormat, ...(stored.reportFormat || {}) },
-    kojiTone: kojiConfig.normalizeTone(stored.kojiTone),
+    kojiTone: kojiConfig.normalizeTone(stored.dialogueTone || stored.kojiTone),
+    dialogueTone: kojiConfig.normalizeTone(stored.dialogueTone || stored.kojiTone),
     hourlyChimeEnabled: Boolean(stored.hourlyChimeEnabled),
     currentCharacter: stored.currentCharacter || "koji",
     currentSkin: stored.currentSkin || "default",
@@ -308,7 +310,7 @@ function renderSettings() {
       <label class="check-line"><input id="animationsInput" type="checkbox" ${settings.animationsEnabled ? "checked" : ""}> 开启 Koji 动画</label>
       <label for="kojiToneInput">Koji 语气风格</label>
       <select id="kojiToneInput">
-        ${Object.entries(toneOptions).map(([key, name]) => `<option value="${key}" ${settings.kojiTone === key ? "selected" : ""}>${name}</option>`).join("")}
+        ${Object.entries(toneOptions).map(([key, name]) => `<option value="${key}" ${settings.dialogueTone === key ? "selected" : ""}>${name}</option>`).join("")}
       </select>
       <label class="check-line"><input id="hourlyChimeInput" type="checkbox" ${settings.hourlyChimeEnabled ? "checked" : ""}> 启用整点报时</label>
       <p>当前版本只显示文字气泡，不播放真实语音；少说话模式下报时会更短。</p>
@@ -726,7 +728,7 @@ function setPetState(stateKey, overrideDuration) {
   const avatar = $("#petAvatar");
   clearTimeout(petTimer);
   pet.className = `koji-pet ${state.cssClass} ${settings.animationsEnabled ? "" : "pet-no-animation"} ${settings.petMinimized ? "pet-minimized" : ""}`;
-  $("#petBubble").textContent = kojiConfig.getDialogue(state.key, settings.kojiTone, state.message);
+  $("#petBubble").textContent = kojiConfig.getDialogue(state.key, settings.dialogueTone || settings.kojiTone, state.message);
   $("#petLabel").textContent = state.label;
   $("#petMiniButton").textContent = state.emoji;
   avatar.className = `pet-avatar ${state.cssClass}`;
@@ -808,7 +810,8 @@ function persistSettingsFromPanel() {
   settings.username = $("#usernameInput").value.trim();
   settings.defaultTemplate = $("#defaultTemplateInput").value;
   settings.animationsEnabled = $("#animationsInput").checked;
-  settings.kojiTone = kojiConfig.normalizeTone($("#kojiToneInput")?.value);
+  settings.dialogueTone = kojiConfig.normalizeTone($("#kojiToneInput")?.value);
+  settings.kojiTone = settings.dialogueTone;
   settings.hourlyChimeEnabled = Boolean($("#hourlyChimeInput")?.checked);
   settings.currentCharacter = $("#currentCharacterInput")?.value || "koji";
   settings.currentSkin = $("#currentSkinInput")?.value || "default";

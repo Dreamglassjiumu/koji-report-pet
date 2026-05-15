@@ -303,3 +303,17 @@ button {
   max-height: 120px;
   object-fit: contain;
 }
+
+.pet-bubble {
+  max-height: 76px;
+  overflow: hidden;
+  white-space: normal;
+  text-wrap: pretty;
+}
+
+.pet-shell:has(.quick-record-panel:not([hidden])) .pet-bubble {
+  max-height: 54px;
+  min-height: 32px;
+  padding-block: 6px;
+  font-size: 12px;
+}
