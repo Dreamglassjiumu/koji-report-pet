@@ -4,7 +4,7 @@ const STORAGE_KEYS = {
   reports: "kojiReportPet.reports",
 };
 
-const defaultTags = ["默认", "Project：X", "毛茸茸骑士", "公司工作", "个人创作", "会议沟通", "资料整理", "功能测试"];
+const defaultTags = ["默认", "Project：X", "公司工作", "pitch创作", "物件包装", "玩法包装", "资料整理", "会议总结", "剧本创作", "角色包装", "文档处理"];
 const defaultReportFormat = {
   title: "",
   includeDate: true,
@@ -20,8 +20,8 @@ const defaultSettings = {
   animationsEnabled: true,
   petMinimized: false,
   reportFormat: { ...defaultReportFormat },
-  kojiTone: "standard",
-  dialogueTone: "standard",
+  kojiTone: "default",
+  dialogueTone: "default",
   hourlyChimeEnabled: false,
   currentCharacter: "koji",
   currentSkin: "default",
@@ -50,7 +50,6 @@ const issueKeywords = ["问题", "异常", "bug", "Bug", "BUG", "乱码", "失�
 const kojiConfig = window.KojiConfig;
 const stateOrder = kojiConfig.stateOrder;
 const petStates = kojiConfig.petStates;
-const toneOptions = kojiConfig.toneOptions;
 const characterOptions = kojiConfig.characters;
 
 let records = {};
@@ -159,8 +158,8 @@ function loadSettings() {
     ...defaultSettings,
     ...stored,
     reportFormat: { ...defaultReportFormat, ...(stored.reportFormat || {}) },
-    kojiTone: kojiConfig.normalizeTone(stored.dialogueTone || stored.kojiTone),
-    dialogueTone: kojiConfig.normalizeTone(stored.dialogueTone || stored.kojiTone),
+    kojiTone: "default",
+    dialogueTone: "default",
     hourlyChimeEnabled: Boolean(stored.hourlyChimeEnabled),
     currentCharacter: stored.currentCharacter || "koji",
     currentSkin: stored.currentSkin || "default",
@@ -308,12 +307,8 @@ function renderSettings() {
         ${Object.entries(templateNames).map(([key, name]) => `<option value="${key}" ${settings.defaultTemplate === key ? "selected" : ""}>${name}</option>`).join("")}
       </select>
       <label class="check-line"><input id="animationsInput" type="checkbox" ${settings.animationsEnabled ? "checked" : ""}> 开启 Koji 动画</label>
-      <label for="kojiToneInput">Koji 语气风格</label>
-      <select id="kojiToneInput">
-        ${Object.entries(toneOptions).map(([key, name]) => `<option value="${key}" ${settings.dialogueTone === key ? "selected" : ""}>${name}</option>`).join("")}
-      </select>
       <label class="check-line"><input id="hourlyChimeInput" type="checkbox" ${settings.hourlyChimeEnabled ? "checked" : ""}> 启用整点报时</label>
-      <p>当前版本只显示文字气泡，不播放真实语音；少说话模式下报时会更短。</p>
+      <p>当前版本只显示文字气泡，不播放真实语音；Koji 使用统一默认台词池。</p>
     </div>
     <div class="setting-box">
       <h3>自定义标签</h3>
@@ -364,7 +359,7 @@ function renderSettings() {
   $("#saveSettingsBtn").addEventListener("click", persistSettingsFromPanel);
   $("#clearAllBtn").addEventListener("click", clearAllData);
   $("#refreshAssetStatusBtn")?.addEventListener("click", renderPetActionTester);
-  ["usernameInput", "defaultTemplateInput", "animationsInput", "kojiToneInput", "hourlyChimeInput", "formatTitleInput", "formatPreferenceInput", "formatClosingInput", "includeDateInput", "includePlanInput", "includeIssuesInput", "customTagsInput"].forEach((id) => {
+  ["usernameInput", "defaultTemplateInput", "animationsInput", "hourlyChimeInput", "formatTitleInput", "formatPreferenceInput", "formatClosingInput", "includeDateInput", "includePlanInput", "includeIssuesInput", "customTagsInput"].forEach((id) => {
     $(`#${id}`).addEventListener("change", persistSettingsFromPanel);
   });
 }
@@ -728,7 +723,7 @@ function setPetState(stateKey, overrideDuration) {
   const avatar = $("#petAvatar");
   clearTimeout(petTimer);
   pet.className = `koji-pet ${state.cssClass} ${settings.animationsEnabled ? "" : "pet-no-animation"} ${settings.petMinimized ? "pet-minimized" : ""}`;
-  $("#petBubble").textContent = kojiConfig.getDialogue(state.key, settings.dialogueTone || settings.kojiTone, state.message);
+  $("#petBubble").textContent = kojiConfig.getDialogue(state.key, "default", state.message);
   $("#petLabel").textContent = state.label;
   $("#petMiniButton").textContent = state.emoji;
   avatar.className = `pet-avatar ${state.cssClass}`;
@@ -810,8 +805,8 @@ function persistSettingsFromPanel() {
   settings.username = $("#usernameInput").value.trim();
   settings.defaultTemplate = $("#defaultTemplateInput").value;
   settings.animationsEnabled = $("#animationsInput").checked;
-  settings.dialogueTone = kojiConfig.normalizeTone($("#kojiToneInput")?.value);
-  settings.kojiTone = settings.dialogueTone;
+  settings.dialogueTone = "default";
+  settings.kojiTone = "default";
   settings.hourlyChimeEnabled = Boolean($("#hourlyChimeInput")?.checked);
   settings.currentCharacter = $("#currentCharacterInput")?.value || "koji";
   settings.currentSkin = $("#currentSkinInput")?.value || "default";

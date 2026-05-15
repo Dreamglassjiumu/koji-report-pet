@@ -1,6 +1,9 @@
 # Koji 台词源文档
 
 > 本文件为台词源文档，程序实际读取 `data/koji-dialogues.js`。
+>
+> 当前程序 v0.5.2 起，只使用一个默认 Koji 台词模式。<br>
+> 文档中原来的 standard / sassy / formal / mixed / quiet 分组可作为历史素材池和后续扩展参考，但程序当前不再暴露多语气选择。
 
 ## 语气模式
 
@@ -12,7 +15,7 @@
 
 ## 状态台词覆盖
 
-程序配置覆盖 13 个状态：`idle`、`wave`、`record_ready`、`collect`、`success`、`thinking`、`writing`、`happy`、`confused`、`angry`、`sleep`、`drag`、`error`。每个语气模式下每个状态至少 5 条短台词。
+程序配置覆盖 13 个状态：`idle`、`wave`、`record_ready`、`collect`、`success`、`thinking`、`writing`、`happy`、`confused`、`angry`、`sleep`、`drag`、`error`。v0.5.2 的程序台词池中，每个状态至少 12 条短台词。
 
 ## 整点报时
 
@@ -20,7 +23,7 @@
 
 ## 抽象梗 / homo 梗风味安全池
 
-安全池只收录不露骨、不攻击现实群体、不含歧视表达的轻度抽象工作梗，例如“这波是日志经济学”“日报素材 +1”等。程序只在 `sassy` 模式下，且仅对 `collect`、`happy`、`angry`、`writing`、`wave` 等状态低概率混入。
+安全池只收录不露骨、不攻击现实群体、不含歧视表达的轻度抽象工作梗，例如“这波是日志经济学”“日报素材 +1”等。v0.5.2 起程序不再按 `sassy` 模式判断，只在 `idle`、`wave`、`collect`、`writing`、`happy`、`angry` 等适合状态低概率混入。
 
 ## 英文 / 中英混合备用池
 

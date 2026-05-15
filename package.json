@@ -1,6 +1,6 @@
 {
   "name": "koji-report-pet",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Koji Report Pet desktop pet daily report assistant",
   "main": "main.js",
   "private": true,

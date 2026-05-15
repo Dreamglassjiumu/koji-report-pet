@@ -1,8 +1,8 @@
-const defaultTags = ["默认", "Project：X", "毛茸茸骑士", "公司工作", "个人创作", "会议沟通", "资料整理", "功能测试"];
+const defaultTags = ["默认", "Project：X", "公司工作", "pitch创作", "物件包装", "玩法包装", "资料整理", "会议总结", "剧本创作", "角色包装", "文档处理"];
 const kojiConfig = window.KojiConfig;
 const stateOrder = kojiConfig.stateOrder;
 const petStates = kojiConfig.petStates;
-const defaultPetSettings = { kojiTone: "standard", dialogueTone: "standard", hourlyChimeEnabled: false, currentCharacter: "koji", currentSkin: "default", lastHourlyChimeKey: "" };
+const defaultPetSettings = { kojiTone: "default", dialogueTone: "default", hourlyChimeEnabled: false, currentCharacter: "koji", currentSkin: "default", lastHourlyChimeKey: "" };
 
 const $ = (selector) => document.querySelector(selector);
 let petTimer = null;
@@ -66,40 +66,39 @@ function pickRandom(list) {
 }
 
 function getCurrentTone() {
-  return kojiConfig.normalizeTone(petSettings.dialogueTone || petSettings.kojiTone);
+  return "default";
 }
 
-function maybePickMemeLine(stateKey, tone) {
-  const memeStates = new Set(["collect", "happy", "angry", "writing", "wave"]);
-  if (tone !== "sassy" || !memeStates.has(stateKey)) return null;
-  if (Math.random() > 0.12) return null;
+function maybePickMemeLine(stateKey) {
+  const memeStates = new Set(["wave", "collect", "happy", "angry", "writing", "idle"]);
+  if (!memeStates.has(stateKey)) return null;
+  if (Math.random() > 0.1) return null;
   return pickRandom(kojiConfig.memeSafePool || window.KOJI_MEME_SAFE_POOL || []);
 }
 
 function getDialogueForState(stateKey) {
-  const tone = getCurrentTone();
-  const memeLine = maybePickMemeLine(stateKey, tone);
+  const memeLine = maybePickMemeLine(stateKey);
   if (memeLine) return memeLine;
-  const pool = kojiConfig.getDialoguePool?.(stateKey, tone)
-    || window.KOJI_DIALOGUES?.[tone]?.[stateKey]
-    || window.KOJI_DIALOGUES?.standard?.[stateKey]
+  const pool = kojiConfig.getDialoguePool?.(stateKey)
+    || window.KOJI_DIALOGUES?.[stateKey]
+    || window.KOJI_DIALOGUES?.default?.[stateKey]
     || [];
   const state = petStates[stateKey] || petStates.idle;
   return pickRandom(pool) || state.message || "Koji 在。";
 }
 
 function getHourlyDialogue(hour) {
-  const tone = getCurrentTone();
-  const pool = kojiConfig.getHourlyPool?.(hour, tone)
-    || window.KOJI_HOURLY_DIALOGUES?.[tone]?.[String(hour).padStart(2, "0")]
-    || window.KOJI_HOURLY_DIALOGUES?.standard?.[String(hour).padStart(2, "0")]
+  const hourKey = String(hour).padStart(2, "0");
+  const pool = kojiConfig.getHourlyPool?.(hour)
+    || window.KOJI_HOURLY_DIALOGUES?.[hourKey]
+    || window.KOJI_HOURLY_DIALOGUES?.default?.[hourKey]
     || [];
   return pickRandom(pool) || `现在是 ${Number(hour)} 点，Koji 提醒你记一下今日素材。`;
 }
 
 function truncatePetMessage(message) {
   const text = String(message || "Koji 在。").trim();
-  const maxLength = getCurrentTone() === "quiet" ? 24 : 58;
+  const maxLength = 58;
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
 }
 
@@ -140,12 +139,11 @@ function sendPetState(state) {
 function loadPetSettings() {
   try {
     const stored = JSON.parse(localStorage.getItem("kojiReportPet.settings") || "{}");
-    const normalizedTone = kojiConfig.normalizeTone(stored.dialogueTone || stored.kojiTone);
     return {
       ...defaultPetSettings,
       ...stored,
-      kojiTone: normalizedTone,
-      dialogueTone: normalizedTone,
+      kojiTone: "default",
+      dialogueTone: "default",
       hourlyChimeEnabled: Boolean(stored.hourlyChimeEnabled),
       currentCharacter: stored.currentCharacter || "koji",
       currentSkin: stored.currentSkin || "default",
@@ -160,16 +158,15 @@ function savePetSettings() {
   const stored = (() => {
     try { return JSON.parse(localStorage.getItem("kojiReportPet.settings") || "{}"); } catch (error) { return {}; }
   })();
-  localStorage.setItem("kojiReportPet.settings", JSON.stringify({ ...stored, ...petSettings, kojiTone: getCurrentTone(), dialogueTone: getCurrentTone() }));
+  localStorage.setItem("kojiReportPet.settings", JSON.stringify({ ...stored, ...petSettings, kojiTone: "default", dialogueTone: "default" }));
 }
 
 function applyPetSettings(nextSettings = {}) {
-  const normalizedTone = kojiConfig.normalizeTone(nextSettings.dialogueTone || nextSettings.kojiTone || petSettings.dialogueTone || petSettings.kojiTone);
   petSettings = {
     ...petSettings,
     ...nextSettings,
-    kojiTone: normalizedTone,
-    dialogueTone: normalizedTone,
+    kojiTone: "default",
+    dialogueTone: "default",
     hourlyChimeEnabled: Object.prototype.hasOwnProperty.call(nextSettings, "hourlyChimeEnabled")
       ? Boolean(nextSettings.hourlyChimeEnabled)
       : petSettings.hourlyChimeEnabled,
@@ -212,7 +209,7 @@ function checkHourlyChime() {
   const state = petStates[getChimeState(now.getHours())] || petStates.wave;
   setPetState(state.key, {
     message: getHourlyDialogue(now.getHours()),
-    duration: getCurrentTone() === "quiet" ? 5200 : 7600,
+    duration: 7600,
   });
   $("#petLabel").textContent = `${state.label} · 整点报时`;
 }

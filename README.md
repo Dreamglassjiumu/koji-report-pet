@@ -2,9 +2,9 @@
 
 Koji Report Pet（中文名：Koji 日报桌宠助手）是一个纯本地的文案组日报桌宠助手。它面向日常工作记录场景：白天随手记录“今天做了什么”，晚上由本地模板和关键词规则整理生成中文日报。
 
-当前版本：**Koji Report Pet v0.5.1 Koji 台词库接入版**。
+当前版本：**Koji Report Pet v0.5.2 Koji 单一台词与文案组标签版**。
 
-v0.5.1 在 v0.5 角色台词与皮肤基础版之上，将 `docs/koji-dialogue-library.md` 整理为程序可读取的 `data/koji-dialogues.js`，让独立 Koji 桌宠根据状态、语气风格、整点报时和用户操作显示更丰富的本地台词。
+v0.5.2 在 v0.5.1 台词库接入版之上，简化 Koji 台词系统为一个统一默认模式，并将默认项目标签更新为更适合文案组日报记录的分类。
 
 ## 运行方式
 
@@ -43,6 +43,15 @@ http://localhost:48763
 网页预览不依赖 `window.kojiDesktop`，没有 Electron IPC 时不会报错；右下角网页 Koji 会作为降级体验保留。Electron 桌面版则隐藏网页 Koji，避免主窗口和独立桌宠同时抢视觉。
 
 
+## v0.5.2 新增内容
+
+- 简化 Koji 台词系统，只保留一个默认台词模式，不再暴露“标准 Koji / 更贱一点 / 更正经一点 / 中英日混合 / 少说话模式”选择。
+- 默认台词模式融合网络梗、中英日混合、抽象梗和安全的 homo 梗风味，同时保持状态反馈清楚、公司内部可用。
+- 移除语气风格选择，减少设置复杂度；旧 `dialogueTone` / `kojiTone` 本地字段会被兼容忽略，不影响启动。
+- 保留整点报时开关，整点文案改为统一的打工人怪话风格，同一小时仍只提示一次，快速记录时不打断输入。
+- 更新默认项目标签为文案组工作分类：默认、Project：X、公司工作、pitch创作、物件包装、玩法包装、资料整理、会议总结、剧本创作、角色包装、文档处理。
+- 用户自定义标签继续保留；历史记录中已经存在的旧标签仍按原文本展示，不做强制迁移。
+
 ## v0.5.1 新增内容
 
 - 新增 `data/koji-dialogues.js`，使用普通全局变量暴露 `KOJI_DIALOGUES`、`KOJI_HOURLY_DIALOGUES`、`KOJI_MEME_SAFE_POOL` 和 `KOJI_DIALOGUE_META`，兼容 Electron renderer 与普通浏览器预览。
@@ -68,7 +77,7 @@ http://localhost:48763
 
 Koji 在 v0.5 中不是严肃办公助手，而是文案组吉祥物：会耍宝、会轻微吐槽、会用中文 + English + 简单日语混合说怪话，但关键功能反馈保持清楚。角色规范见 [`docs/koji-character-spec.md`](docs/koji-character-spec.md)，台词源文档见 [`docs/koji-dialogue-library.md`](docs/koji-dialogue-library.md)。
 
-语气风格会保存在 `kojiReportPet.settings` 中，并通过 Electron IPC 同步到独立桌宠窗口；普通浏览器预览没有 IPC 时会安全降级。
+v0.5.2 起程序只使用统一默认台词模式；旧版保存在 `kojiReportPet.settings` 中的语气字段会被兼容忽略。设置仍会通过 Electron IPC 同步到独立桌宠窗口；普通浏览器预览没有 IPC 时会安全降级。
 
 ## v0.4.1 修复内容
 
@@ -165,8 +174,8 @@ preload.js              # 安全暴露 window.kojiDesktop API
 index.html              # 主窗口页面结构：日报记录、生成、历史、设置和网页预览 Koji
 styles.css              # 主窗口样式：暖色 UI、卡片、按钮、响应式、Toast 和网页 Koji 预览
 app.js                  # 主窗口逻辑：localStorage、事项 CRUD、日报生成、导出、设置、历史记录和桌宠命令处理
-koji-config.js          # Koji 状态、台词读取兜底、语气风格、整点报时、角色/皮肤配置雏形
-data/koji-dialogues.js  # v0.5.1 程序可读取台词配置：状态台词、整点报时、安全梗池和元信息
+koji-config.js          # Koji 状态、单一默认台词读取兜底、整点报时、角色/皮肤配置雏形
+data/koji-dialogues.js  # v0.5.2 程序可读取单一台词配置：状态台词、整点报时、安全梗池和元信息
 pet.html                # 独立桌宠窗口结构和快速记录表单
 pet.css                 # 独立桌宠窗口透明 UI、拖动区域、快速记录面板和状态动画
 pet.js                  # 独立桌宠窗口状态配置、快速记录、右键菜单触发、双击打开面板和 IPC 移动
