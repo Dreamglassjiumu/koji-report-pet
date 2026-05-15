@@ -35,14 +35,17 @@ button {
 }
 
 .pet-shell {
-  width: 320px;
-  height: 430px;
+  width: 100vw;
+  height: 100vh;
+  min-width: 0;
+  min-height: 0;
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto;
   justify-items: center;
   align-content: start;
-  gap: 9px;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  overflow: hidden;
   background: transparent !important;
   -webkit-app-region: drag;
 }
@@ -56,8 +59,8 @@ button {
 
 .pet-bubble {
   position: relative;
-  width: min(100%, 240px);
-  min-height: 42px;
+  width: min(100%, 232px);
+  min-height: 40px;
   display: grid;
   place-items: center;
   padding: 8px 12px;
@@ -128,14 +131,15 @@ button {
 }
 
 .quick-record-panel {
-  width: 292px;
+  width: min(100%, 316px);
   display: grid;
-  gap: 7px;
-  padding: 10px;
+  gap: 8px;
+  padding: 12px;
   border: 1px solid rgba(229, 196, 166, 0.94);
-  border-radius: 20px;
-  background: rgba(255, 250, 241, 0.96);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.98), rgba(255, 244, 226, 0.96));
   box-shadow: 0 18px 36px rgba(90, 54, 28, 0.18);
+  -webkit-app-region: no-drag;
 }
 
 .quick-record-panel[hidden] { display: none; }
@@ -150,9 +154,11 @@ button {
   background: rgba(255, 255, 255, 0.96);
   color: #4c3322;
   outline: none;
+  -webkit-app-region: no-drag;
 }
 
 .quick-record-panel textarea {
+  height: 74px;
   resize: none;
   padding: 8px 10px;
   line-height: 1.45;
@@ -162,13 +168,13 @@ button {
 
 .quick-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.2fr;
+  grid-template-columns: 1fr 1fr 1.25fr;
   gap: 6px;
 }
 
 .quick-actions button {
-  min-height: 30px;
-  padding: 6px 8px;
+  min-height: 32px;
+  padding: 7px 8px;
   border: 1px solid rgba(229, 196, 166, 0.96);
   border-radius: 999px;
   background: rgba(255, 248, 238, 0.94);
@@ -176,6 +182,8 @@ button {
   box-shadow: 0 8px 18px rgba(117, 76, 42, 0.12);
   font-size: 12px;
   font-weight: 900;
+  white-space: nowrap;
+  -webkit-app-region: no-drag;
 }
 
 #quickSubmitBtn { color: white; background: linear-gradient(135deg, #ff8f68, #dc5f38); border-color: transparent; }

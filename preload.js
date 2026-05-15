@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld("kojiDesktop", {
   showPetContextMenu: () => ipcRenderer.invoke("show-pet-context-menu"),
   sendDesktopCommand: (command) => ipcRenderer.invoke("desktop-command:send", command),
   movePetWindow: (deltaX, deltaY) => ipcRenderer.invoke("pet-window:move", { deltaX, deltaY }),
+  setPetWindowMode: (mode) => ipcRenderer.invoke("pet-window:set-mode", mode === "quickInput" ? "quickInput" : "compact"),
   onPetStateChanged: (callback) => {
     if (typeof callback !== "function") return () => {};
     const listener = (_event, state) => callback(normalizeState(state));

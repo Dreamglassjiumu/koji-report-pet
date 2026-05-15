@@ -5,7 +5,14 @@ let mainWindow = null;
 let petWindow = null;
 let isQuitting = false;
 let petBoundsMemory = null;
+let petWindowMode = "compact";
+let compactPetBoundsMemory = null;
 let quickRecordRequestId = 0;
+
+const petWindowSizes = {
+  compact: { width: 260, height: 300 },
+  quickInput: { width: 340, height: 520 },
+};
 
 const petStateLabels = [
   ["idle", "待机"],
@@ -56,17 +63,58 @@ function createMainWindow() {
   return mainWindow;
 }
 
+function clampPetBounds(bounds) {
+  const display = screen.getDisplayMatching(bounds);
+  const { workArea } = display || screen.getPrimaryDisplay();
+  const width = Math.min(bounds.width, workArea.width);
+  const height = Math.min(bounds.height, workArea.height);
+  const minX = workArea.x;
+  const minY = workArea.y;
+  const maxX = workArea.x + workArea.width - width;
+  const maxY = workArea.y + workArea.height - height;
+
+  return {
+    width,
+    height,
+    x: Math.round(Math.min(Math.max(bounds.x, minX), maxX)),
+    y: Math.round(Math.min(Math.max(bounds.y, minY), maxY)),
+  };
+}
+
 function getPetWindowBounds() {
-  if (petBoundsMemory) return petBoundsMemory;
+  if (petBoundsMemory) return clampPetBounds(petBoundsMemory);
   const { workArea } = screen.getPrimaryDisplay();
-  const width = 320;
-  const height = 430;
+  const { width, height } = petWindowSizes.compact;
   return {
     width,
     height,
     x: Math.round(workArea.x + workArea.width - width - 28),
     y: Math.round(workArea.y + workArea.height - height - 42),
   };
+}
+
+function setPetWindowMode(mode = "compact") {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  const nextMode = mode === "quickInput" ? "quickInput" : "compact";
+  const nextSize = petWindowSizes[nextMode];
+  const currentBounds = petWindow.getBounds();
+
+  if (nextMode === "quickInput" && petWindowMode !== "quickInput") {
+    compactPetBoundsMemory = { ...currentBounds, ...petWindowSizes.compact };
+  }
+
+  const targetBounds = nextMode === "compact" && compactPetBoundsMemory
+    ? { ...compactPetBoundsMemory, ...nextSize }
+    : { ...currentBounds, ...nextSize };
+  const safeBounds = clampPetBounds(targetBounds);
+
+  petWindowMode = nextMode;
+  petWindow.setBounds(safeBounds, false);
+  petBoundsMemory = safeBounds;
+
+  if (nextMode === "compact") {
+    compactPetBoundsMemory = safeBounds;
+  }
 }
 
 function createPetWindow() {
@@ -93,6 +141,12 @@ function createPetWindow() {
   petWindow.loadFile("pet.html");
 
   petWindow.on("moved", () => {
+    if (!petWindow || petWindow.isDestroyed()) return;
+    petBoundsMemory = petWindow.getBounds();
+    if (petWindowMode === "compact") compactPetBoundsMemory = petBoundsMemory;
+  });
+
+  petWindow.on("resized", () => {
     if (petWindow && !petWindow.isDestroyed()) petBoundsMemory = petWindow.getBounds();
   });
 
@@ -189,12 +243,14 @@ ipcMain.handle("main-window:toggle", () => toggleMainWindow());
 ipcMain.handle("pet-state:set", (_event, state) => broadcastPetState(state));
 ipcMain.handle("quick-record:add", (_event, { text, tag }) => requestQuickRecord(text, tag));
 ipcMain.handle("show-pet-context-menu", () => showPetContextMenu());
+ipcMain.handle("pet-window:set-mode", (_event, mode) => setPetWindowMode(mode));
 ipcMain.handle("desktop-command:send", (_event, command) => sendMainCommand(command));
 ipcMain.handle("pet-window:move", (_event, { deltaX = 0, deltaY = 0 }) => {
   if (!petWindow || petWindow.isDestroyed()) return;
   const [x, y] = petWindow.getPosition();
   petWindow.setPosition(Math.round(x + deltaX), Math.round(y + deltaY), false);
   petBoundsMemory = petWindow.getBounds();
+  compactPetBoundsMemory = { ...petBoundsMemory, ...petWindowSizes.compact };
 });
 ipcMain.handle("app:quit", () => {
   isQuitting = true;
