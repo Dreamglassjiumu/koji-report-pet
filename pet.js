@@ -30,6 +30,7 @@ let clickTimer = null;
 let dragInfo = null;
 let suppressClickUntil = 0;
 let currentStateKey = "idle";
+let quickRecordVisible = false;
 
 function assetCandidates(state) {
   return ["png", "webp", "gif"].map((ext) => `assets/koji/${state.key}.${ext}`);
@@ -98,16 +99,25 @@ function loadTags() {
 }
 
 function showQuickRecord() {
+  clearTimeout(clickTimer);
+  if (dragInfo?.moved || Date.now() < suppressClickUntil) return;
+
+  quickRecordVisible = true;
   loadTags();
   sendPetState("record_ready");
+  window.kojiDesktop?.setPetWindowMode?.("quickInput");
+
   const panel = $("#quickRecordForm");
   panel.hidden = false;
-  $("#quickRecordText").focus();
+  requestAnimationFrame(() => $("#quickRecordText").focus());
 }
 
 function hideQuickRecord(nextState = "idle") {
+  clearTimeout(clickTimer);
+  quickRecordVisible = false;
   $("#quickRecordForm").hidden = true;
   $("#quickRecordText").value = "";
+  window.kojiDesktop?.setPetWindowMode?.("compact");
   sendPetState(nextState);
 }
 
@@ -124,8 +134,10 @@ async function submitQuickRecord() {
   try {
     const result = await window.kojiDesktop?.submitQuickRecord?.(text, tag);
     if (result && result.ok === false) throw new Error(result.message || "记录失败");
+    quickRecordVisible = false;
     $("#quickRecordForm").hidden = true;
     $("#quickRecordText").value = "";
+    window.kojiDesktop?.setPetWindowMode?.("compact");
     sendPetState("collect");
     setBubble(successMessages[Math.floor(Math.random() * successMessages.length)]);
   } catch (error) {
@@ -142,8 +154,12 @@ function handleSingleClick() {
 
 function handleDoubleClick() {
   clearTimeout(clickTimer);
-  $("#quickRecordForm").hidden = true;
-  sendPetState("wave");
+  suppressClickUntil = Date.now() + 320;
+  if (quickRecordVisible) {
+    hideQuickRecord("wave");
+  } else {
+    sendPetState("wave");
+  }
   window.kojiDesktop?.showMainWindow?.();
 }
 
@@ -175,7 +191,7 @@ function bindManualDrag() {
     dragInfo = null;
     if (wasDragging) {
       suppressClickUntil = Date.now() + 260;
-      setPetState("idle");
+      setPetState(quickRecordVisible ? "record_ready" : "idle");
     }
   };
   body.addEventListener("pointerup", finishDrag);
@@ -185,8 +201,8 @@ function bindManualDrag() {
 function bindPetEvents() {
   const body = $("#petBody");
   body.addEventListener("mouseenter", () => currentStateKey === "idle" && setPetState("wave"));
-  body.addEventListener("click", () => {
-    if (Date.now() < suppressClickUntil || dragInfo?.moved) return;
+  body.addEventListener("click", (event) => {
+    if (event.button !== 0 || Date.now() < suppressClickUntil || dragInfo?.moved) return;
     clearTimeout(clickTimer);
     clickTimer = setTimeout(handleSingleClick, 220);
   });
@@ -203,10 +219,15 @@ function bindPetEvents() {
     }
   });
   $("#quickCancelBtn").addEventListener("click", () => hideQuickRecord("idle"));
-  $("#quickOpenBtn").addEventListener("click", () => window.kojiDesktop?.showMainWindow?.());
+  $("#quickOpenBtn").addEventListener("click", () => {
+    hideQuickRecord("wave");
+    window.kojiDesktop?.showMainWindow?.();
+  });
 
   document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
+    clearTimeout(clickTimer);
+    suppressClickUntil = Date.now() + 260;
     window.kojiDesktop?.showPetContextMenu?.();
   });
 
@@ -223,6 +244,7 @@ function init() {
   });
   bindPetEvents();
   loadTags();
+  window.kojiDesktop?.setPetWindowMode?.("compact");
   setPetState("idle");
 }
 
