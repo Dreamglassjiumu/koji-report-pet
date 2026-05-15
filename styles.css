@@ -452,3 +452,23 @@ input:focus, select:focus, textarea:focus {
 }
 .pet-asset-checklist strong { grid-column: 1 / -1; }
 .pet-asset-checklist code { font-size: 0.78rem; color: #745640; overflow-wrap: anywhere; }
+.asset-status-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.55rem;
+}
+.asset-status-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 253, 248, 0.92);
+}
+.asset-status-card div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.asset-status-card p { margin: 0; font-size: 0.82rem; }
+.asset-status-card small { color: var(--muted); }
+.asset-status-card code { display: block; }
+.asset-ok { border-color: rgba(91, 153, 91, 0.45); }
+.asset-fallback { border-color: rgba(217, 151, 73, 0.55); }

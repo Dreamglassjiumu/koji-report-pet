@@ -20,6 +20,11 @@ const defaultSettings = {
   animationsEnabled: true,
   petMinimized: false,
   reportFormat: { ...defaultReportFormat },
+  kojiTone: "standard",
+  hourlyChimeEnabled: false,
+  currentCharacter: "koji",
+  currentSkin: "default",
+  lastHourlyChimeKey: "",
 };
 
 const templateNames = {
@@ -41,21 +46,11 @@ const categoryRules = [
 
 const issueKeywords = ["问题", "异常", "bug", "Bug", "BUG", "乱码", "失败", "修复", "排查", "报错", "阻塞", "错误"];
 
-const petStates = {
-  idle: { key: "idle", label: "待机", emoji: "🐾", image: "assets/koji/idle.png", message: "来了，今天干啥了？", cssClass: "pet-idle", duration: 0, soundHint: "" },
-  wave: { key: "wave", label: "打招呼", emoji: "👋", image: "assets/koji/wave.png", message: "嗨，我在右下角盯着日报。", cssClass: "pet-wave", duration: 1800, soundHint: "" },
-  record_ready: { key: "record_ready", label: "准备记录", emoji: "📝", image: "assets/koji/record_ready.png", message: "说吧，今天又干啥了？", cssClass: "pet-record-ready", duration: 2200, soundHint: "" },
-  collect: { key: "collect", label: "收集记录", emoji: "📥", image: "assets/koji/collect.png", message: "收到，已经收进日报素材库。", cssClass: "pet-collect", duration: 2400, soundHint: "" },
-  success: { key: "success", label: "通用成功", emoji: "✅", image: "assets/koji/success.png", message: "这条我记下了。", cssClass: "pet-success", duration: 2200, soundHint: "" },
-  thinking: { key: "thinking", label: "思考", emoji: "🤔", image: "assets/koji/thinking.png", message: "我琢磨一下怎么归档。", cssClass: "pet-thinking", duration: 1800, soundHint: "" },
-  writing: { key: "writing", label: "写日报", emoji: "✍️", image: "assets/koji/writing.png", message: "日报我来写！", cssClass: "pet-writing", duration: 2400, soundHint: "" },
-  happy: { key: "happy", label: "开心", emoji: "🎉", image: "assets/koji/happy.png", message: "复制好了，去交差吧！", cssClass: "pet-happy", duration: 2400, soundHint: "" },
-  confused: { key: "confused", label: "疑惑", emoji: "😵‍💫", image: "assets/koji/confused.png", message: "今天还啥都没记呢！", cssClass: "pet-confused", duration: 2600, soundHint: "" },
-  angry: { key: "angry", label: "催日报", emoji: "😾", image: "assets/koji/angry.png", message: "你是不是又忘写日报了？", cssClass: "pet-angry", duration: 3000, soundHint: "" },
-  sleep: { key: "sleep", label: "困倦", emoji: "💤", image: "assets/koji/sleep.png", message: "太晚了，日报写完就收工吧。", cssClass: "pet-sleep", duration: 2600, soundHint: "" },
-  drag: { key: "drag", label: "拖动", emoji: "🌀", image: "assets/koji/drag.png", message: "别拎我耳朵，放这也行。", cssClass: "pet-drag", duration: 0, soundHint: "" },
-  error: { key: "error", label: "报错", emoji: "⚠️", image: "assets/koji/error.png", message: "哎呀，本地保存或复制好像失败了。", cssClass: "pet-error", duration: 3200, soundHint: "" },
-};
+const kojiConfig = window.KojiConfig;
+const stateOrder = kojiConfig.stateOrder;
+const petStates = kojiConfig.petStates;
+const toneOptions = kojiConfig.toneOptions;
+const characterOptions = kojiConfig.characters;
 
 let records = {};
 let reports = {};
@@ -163,11 +158,18 @@ function loadSettings() {
     ...defaultSettings,
     ...stored,
     reportFormat: { ...defaultReportFormat, ...(stored.reportFormat || {}) },
+    kojiTone: kojiConfig.normalizeTone(stored.kojiTone),
+    hourlyChimeEnabled: Boolean(stored.hourlyChimeEnabled),
+    currentCharacter: stored.currentCharacter || "koji",
+    currentSkin: stored.currentSkin || "default",
+    lastHourlyChimeKey: stored.lastHourlyChimeKey || "",
   };
 }
 
 function saveSettings() {
-  return safeWriteJson(STORAGE_KEYS.settings, settings);
+  const ok = safeWriteJson(STORAGE_KEYS.settings, settings);
+  if (ok) window.kojiDesktop?.broadcastSettings?.(settings);
+  return ok;
 }
 
 function safeReadJson(key, fallback) {
@@ -304,6 +306,12 @@ function renderSettings() {
         ${Object.entries(templateNames).map(([key, name]) => `<option value="${key}" ${settings.defaultTemplate === key ? "selected" : ""}>${name}</option>`).join("")}
       </select>
       <label class="check-line"><input id="animationsInput" type="checkbox" ${settings.animationsEnabled ? "checked" : ""}> 开启 Koji 动画</label>
+      <label for="kojiToneInput">Koji 语气风格</label>
+      <select id="kojiToneInput">
+        ${Object.entries(toneOptions).map(([key, name]) => `<option value="${key}" ${settings.kojiTone === key ? "selected" : ""}>${name}</option>`).join("")}
+      </select>
+      <label class="check-line"><input id="hourlyChimeInput" type="checkbox" ${settings.hourlyChimeEnabled ? "checked" : ""}> 启用整点报时</label>
+      <p>当前版本只显示文字气泡，不播放真实语音；少说话模式下报时会更短。</p>
     </div>
     <div class="setting-box">
       <h3>自定义标签</h3>
@@ -331,8 +339,16 @@ function renderSettings() {
       </div>
     </div>
     <div class="setting-box wide-setting">
-      <h3>Koji 动作测试面板</h3>
+      <h3>Koji 角色 / 皮肤</h3>
+      <p>当前角色：<strong>${escapeHtml(characterOptions.koji.displayName)}</strong> · 当前皮肤：<strong>${escapeHtml(characterOptions.koji.skins.default.displayName)}</strong></p>
+      <p>新角色与 Koji cosplay 皮肤系统：预留中。当前保持 <code>assets/koji/</code> 兼容，未来可扩展到 <code>assets/characters/koji/default/</code>。</p>
+      <input id="currentCharacterInput" type="hidden" value="${escapeHtml(settings.currentCharacter)}">
+      <input id="currentSkinInput" type="hidden" value="${escapeHtml(settings.currentSkin)}">
+    </div>
+    <div class="setting-box wide-setting">
+      <h3>Koji 动作测试与素材检查</h3>
       <div id="petActionTester" class="pet-action-grid"></div>
+      <button id="refreshAssetStatusBtn" type="button" class="secondary-btn">刷新素材状态</button>
       <div id="petAssetChecklist" class="pet-asset-checklist"></div>
     </div>
     <div class="setting-box danger-zone">
@@ -345,7 +361,8 @@ function renderSettings() {
   renderPetActionTester();
   $("#saveSettingsBtn").addEventListener("click", persistSettingsFromPanel);
   $("#clearAllBtn").addEventListener("click", clearAllData);
-  ["usernameInput", "defaultTemplateInput", "animationsInput", "formatTitleInput", "formatPreferenceInput", "formatClosingInput", "includeDateInput", "includePlanInput", "includeIssuesInput", "customTagsInput"].forEach((id) => {
+  $("#refreshAssetStatusBtn")?.addEventListener("click", renderPetActionTester);
+  ["usernameInput", "defaultTemplateInput", "animationsInput", "kojiToneInput", "hourlyChimeInput", "formatTitleInput", "formatPreferenceInput", "formatClosingInput", "includeDateInput", "includePlanInput", "includeIssuesInput", "customTagsInput"].forEach((id) => {
     $(`#${id}`).addEventListener("change", persistSettingsFromPanel);
   });
 }
@@ -353,12 +370,61 @@ function renderSettings() {
 function renderPetActionTester() {
   const panel = $("#petActionTester");
   if (!panel) return;
-  panel.innerHTML = Object.values(petStates).map((state) => `<button type="button" class="tiny-btn" data-state="${state.key}">${state.emoji} ${state.label}</button>`).join("");
+  panel.innerHTML = stateOrder.map((stateKey) => {
+    const state = petStates[stateKey];
+    return `<button type="button" class="tiny-btn" data-state="${state.key}">${state.emoji} ${state.label}</button>`;
+  }).join("");
   panel.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setPetState(button.dataset.state)));
+  renderAssetChecklist();
+}
+
+async function renderAssetChecklist() {
   const checklist = $("#petAssetChecklist");
-  if (checklist) {
-    checklist.innerHTML = `<strong>素材命名检查</strong>${Object.values(petStates).map((state) => `<code>assets/koji/${state.key}.png</code><code>assets/koji/${state.key}.webp</code><code>assets/koji/${state.key}.gif</code>`).join("")}`;
+  if (!checklist) return;
+  checklist.innerHTML = `<strong>Koji 素材检查</strong><p>检测中：优先级 webp &gt; gif &gt; png &gt; idle &gt; emoji。</p>`;
+  const rows = await Promise.all(stateOrder.map((stateKey) => resolveAssetForState(stateKey)));
+  checklist.innerHTML = `
+    <strong>Koji 素材检查</strong>
+    <p>优先级：<code>assets/koji/{state}.webp</code> → <code>.gif</code> → <code>.png</code> → <code>idle</code> → emoji。</p>
+    <div class="asset-status-grid">
+      ${rows.map((row) => `
+        <article class="asset-status-card ${row.hasDedicated ? "asset-ok" : "asset-fallback"}">
+          <div><strong>${escapeHtml(row.state.key)}</strong><span>${escapeHtml(row.state.label)}</span></div>
+          <p>${row.hasDedicated ? "检测到专属素材" : row.path ? "未检测到专属素材" : "未检测到图片素材"}</p>
+          <code>${escapeHtml(row.path || row.state.emoji)}</code>
+          <small>${escapeHtml(row.note)}</small>
+          <button type="button" class="tiny-btn" data-state="${escapeHtml(row.state.key)}">测试动作</button>
+        </article>
+      `).join("")}
+    </div>
+  `;
+  checklist.querySelectorAll("button[data-state]").forEach((button) => button.addEventListener("click", () => setPetState(button.dataset.state)));
+}
+
+async function resolveAssetForState(stateKey) {
+  const state = petStates[stateKey] || petStates.idle;
+  const dedicated = kojiConfig.getAssetCandidates(state.key, settings.currentCharacter, settings.currentSkin);
+  const dedicatedPath = await firstLoadableImage(dedicated);
+  if (dedicatedPath) return { state, hasDedicated: true, path: dedicatedPath, note: "使用专属素材" };
+  if (state.key !== "idle") {
+    const idlePath = await firstLoadableImage(kojiConfig.getAssetCandidates("idle", settings.currentCharacter, settings.currentSkin));
+    if (idlePath) return { state, hasDedicated: false, path: idlePath, note: "回退到 idle 素材" };
   }
+  return { state, hasDedicated: false, path: "", note: "回退 emoji" };
+}
+
+function firstLoadableImage(paths) {
+  return new Promise((resolve) => {
+    let index = 0;
+    const tryNext = () => {
+      if (index >= paths.length) return resolve("");
+      const img = new Image();
+      img.onload = () => resolve(paths[index]);
+      img.onerror = () => { index += 1; tryNext(); };
+      img.src = paths[index];
+    };
+    tryNext();
+  });
 }
 
 function createRecord(text, tag) {
@@ -624,14 +690,16 @@ function formatRecordText(record) {
 }
 
 function getPetAssetCandidates(state) {
-  return ["png", "webp", "gif"].map((ext) => `assets/koji/${state.key}.${ext}`);
+  return kojiConfig.getAssetCandidates(state.key, settings.currentCharacter, settings.currentSkin);
 }
 
 function renderPetFace(face, state) {
-  const candidates = getPetAssetCandidates(state);
+  const candidates = [...getPetAssetCandidates(state)];
+  if (state.key !== "idle") candidates.push(...kojiConfig.getAssetCandidates("idle", settings.currentCharacter, settings.currentSkin));
   let index = 0;
   const tryNext = () => {
     if (index >= candidates.length) {
+      face.innerHTML = "";
       face.textContent = state.emoji;
       return;
     }
@@ -658,7 +726,7 @@ function setPetState(stateKey, overrideDuration) {
   const avatar = $("#petAvatar");
   clearTimeout(petTimer);
   pet.className = `koji-pet ${state.cssClass} ${settings.animationsEnabled ? "" : "pet-no-animation"} ${settings.petMinimized ? "pet-minimized" : ""}`;
-  $("#petBubble").textContent = state.message;
+  $("#petBubble").textContent = kojiConfig.getDialogue(state.key, settings.kojiTone, state.message);
   $("#petLabel").textContent = state.label;
   $("#petMiniButton").textContent = state.emoji;
   avatar.className = `pet-avatar ${state.cssClass}`;
@@ -740,6 +808,10 @@ function persistSettingsFromPanel() {
   settings.username = $("#usernameInput").value.trim();
   settings.defaultTemplate = $("#defaultTemplateInput").value;
   settings.animationsEnabled = $("#animationsInput").checked;
+  settings.kojiTone = kojiConfig.normalizeTone($("#kojiToneInput")?.value);
+  settings.hourlyChimeEnabled = Boolean($("#hourlyChimeInput")?.checked);
+  settings.currentCharacter = $("#currentCharacterInput")?.value || "koji";
+  settings.currentSkin = $("#currentSkinInput")?.value || "default";
   settings.customTags = $("#customTagsInput").value.split(/[，,、\n]/).map((tag) => tag.trim()).filter(Boolean);
   settings.reportFormat = {
     title: $("#formatTitleInput").value.trim(),
