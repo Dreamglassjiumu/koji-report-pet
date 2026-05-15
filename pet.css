@@ -102,11 +102,17 @@ button {
   height: 132px;
   display: grid;
   place-items: center;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  overflow: visible;
   animation: koji-breathe 2.4s ease-in-out infinite;
   touch-action: none;
 }
@@ -118,23 +124,94 @@ button {
   place-items: center;
   width: 100%;
   height: 100%;
-  padding: 0;
-  border: none;
-  background: transparent;
-  box-shadow: none;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  overflow: visible;
   font-size: 72px;
   line-height: 1;
 }
 
 .pet-face img {
   display: block;
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: transparent;
-  box-shadow: none;
+  max-width: 120px;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
   object-fit: contain;
   pointer-events: none;
+}
+
+.pet-visual.is-image-mode,
+.pet-visual.is-image-mode .pet-face {
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+}
+
+.pet-visual.is-image-mode img {
+  display: block;
+  max-width: 120px;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  object-fit: contain;
+}
+
+.pet-visual.is-emoji-mode {
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+}
+
+.pet-visual.is-emoji-mode .pet-face {
+  width: 112px;
+  height: 112px;
+  border-radius: 28px !important;
+  background: rgba(255, 248, 226, 0.9) !important;
+  box-shadow: 0 10px 24px rgba(110, 70, 36, 0.12) !important;
 }
 
 .quick-record-panel {
@@ -222,7 +299,7 @@ button {
 .quick-record-panel:not([hidden]) { margin-top: 2px; }
 .quick-record-panel:not([hidden]) ~ * { pointer-events: none; }
 .pet-face img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: 120px;
+  max-height: 120px;
   object-fit: contain;
 }

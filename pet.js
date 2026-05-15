@@ -13,6 +13,7 @@ let currentStateKey = "idle";
 let quickRecordVisible = false;
 let petSettings = loadPetSettings();
 let hourlyTimer = null;
+let faceRenderId = 0;
 
 function assetCandidates(state) {
   const candidates = [...kojiConfig.getAssetCandidates(state.key, petSettings.currentCharacter, petSettings.currentSkin)];
@@ -20,23 +21,38 @@ function assetCandidates(state) {
   return candidates;
 }
 
+function setVisualMode(mode) {
+  const body = $("#petBody");
+  body.classList.toggle("is-image-mode", mode === "image");
+  body.classList.toggle("is-emoji-mode", mode === "emoji");
+}
+
 function renderFace(state) {
   const face = $("#petFace");
   const candidates = assetCandidates(state);
+  const renderId = ++faceRenderId;
   let index = 0;
+
+  setVisualMode("image");
+
   const tryNext = () => {
+    if (renderId !== faceRenderId) return;
     if (index >= candidates.length) {
       face.innerHTML = "";
       face.textContent = state.emoji;
+      setVisualMode("emoji");
       return;
     }
     const img = new Image();
     img.alt = state.label;
     img.onload = () => {
+      if (renderId !== faceRenderId) return;
       face.innerHTML = "";
       face.appendChild(img);
+      setVisualMode("image");
     };
     img.onerror = () => {
+      if (renderId !== faceRenderId) return;
       index += 1;
       tryNext();
     };
