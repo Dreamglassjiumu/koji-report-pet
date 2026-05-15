@@ -6,7 +6,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background: transparent;
+  background: transparent !important;
   font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
   color: #4c3322;
   user-select: none;
@@ -14,24 +14,36 @@ body {
 
 body { -webkit-app-region: drag; }
 
-button {
-  border: 0;
-  appearance: none;
-  font: inherit;
-  cursor: pointer;
+button,
+textarea,
+select,
+.quick-record-panel,
+.pet-body {
   -webkit-app-region: no-drag;
 }
 
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  appearance: none;
+  cursor: pointer;
+}
+
 .pet-shell {
-  width: 220px;
-  height: 260px;
+  width: 320px;
+  height: 430px;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr;
   justify-items: center;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px 12px;
-  background: transparent;
+  align-content: start;
+  gap: 9px;
+  padding: 12px 14px;
+  background: transparent !important;
   -webkit-app-region: drag;
 }
 
@@ -40,19 +52,18 @@ button {
   justify-items: center;
   gap: 4px;
   width: 100%;
-  pointer-events: none;
 }
 
 .pet-bubble {
   position: relative;
-  width: 100%;
+  width: min(100%, 240px);
   min-height: 42px;
   display: grid;
   place-items: center;
   padding: 8px 12px;
   border: 1px solid rgba(233, 203, 171, 0.92);
   border-radius: 18px 18px 18px 6px;
-  background: rgba(255, 252, 245, 0.92);
+  background: rgba(255, 252, 245, 0.94);
   box-shadow: 0 12px 28px rgba(110, 70, 36, 0.14);
   font-size: 13px;
   font-weight: 800;
@@ -67,7 +78,7 @@ button {
   bottom: -7px;
   width: 12px;
   height: 12px;
-  background: rgba(255, 252, 245, 0.92);
+  background: rgba(255, 252, 245, 0.94);
   border-right: 1px solid rgba(233, 203, 171, 0.92);
   border-bottom: 1px solid rgba(233, 203, 171, 0.92);
   transform: translateX(-50%) rotate(45deg);
@@ -84,8 +95,8 @@ button {
 }
 
 .pet-body {
-  width: 116px;
-  height: 116px;
+  width: 122px;
+  height: 122px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -94,53 +105,88 @@ button {
   background: radial-gradient(circle at 35% 28%, #fffdf8 0 20%, #ffe8ca 44%, #ffc078 100%);
   box-shadow: inset 0 -16px 26px rgba(183, 93, 40, 0.16), 0 18px 36px rgba(100, 62, 31, 0.22);
   animation: koji-breathe 2.4s ease-in-out infinite;
+  touch-action: none;
 }
+
+.pet-body:hover { transform: translateY(-1px); }
 
 .pet-face {
   display: grid;
   place-items: center;
-  width: 94px;
-  height: 94px;
-  font-size: 50px;
+  width: 98px;
+  height: 98px;
+  font-size: 52px;
   line-height: 1;
 }
 
 .pet-face img {
   display: block;
-  width: 94px;
-  height: 94px;
+  width: 98px;
+  height: 98px;
   object-fit: contain;
   pointer-events: none;
 }
 
-.pet-actions {
-  width: 100%;
+.quick-record-panel {
+  width: 292px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  -webkit-app-region: no-drag;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid rgba(229, 196, 166, 0.94);
+  border-radius: 20px;
+  background: rgba(255, 250, 241, 0.96);
+  box-shadow: 0 18px 36px rgba(90, 54, 28, 0.18);
 }
 
-.pet-actions button {
+.quick-record-panel[hidden] { display: none; }
+.quick-record-panel strong { font-size: 14px; }
+.quick-record-panel label { font-size: 12px; font-weight: 900; color: #775840; }
+
+.quick-record-panel textarea,
+.quick-record-panel select {
+  width: 100%;
+  border: 1px solid rgba(229, 196, 166, 0.95);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #4c3322;
+  outline: none;
+}
+
+.quick-record-panel textarea {
+  resize: none;
+  padding: 8px 10px;
+  line-height: 1.45;
+}
+
+.quick-record-panel select { padding: 7px 10px; }
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 6px;
+}
+
+.quick-actions button {
   min-height: 30px;
   padding: 6px 8px;
   border: 1px solid rgba(229, 196, 166, 0.96);
   border-radius: 999px;
   background: rgba(255, 248, 238, 0.94);
   color: #6b4b35;
-  box-shadow: 0 8px 18px rgba(117, 76, 42, 0.14);
+  box-shadow: 0 8px 18px rgba(117, 76, 42, 0.12);
   font-size: 12px;
   font-weight: 900;
 }
 
-.pet-actions button:hover,
-.pet-body:hover { transform: translateY(-1px); }
+#quickSubmitBtn { color: white; background: linear-gradient(135deg, #ff8f68, #dc5f38); border-color: transparent; }
 
 .pet-wave .pet-body { animation: koji-wave 0.7s ease-in-out infinite; }
 .pet-success .pet-body,
+.pet-collect .pet-body,
 .pet-happy .pet-body { animation: koji-pop 0.8s ease-in-out infinite; }
 .pet-thinking .pet-body,
-.pet-writing .pet-body { animation: koji-wiggle 1s ease-in-out infinite; }
+.pet-writing .pet-body,
+.pet-record-ready .pet-body { animation: koji-wiggle 1s ease-in-out infinite; }
 .pet-angry .pet-body,
 .pet-error .pet-body { animation: koji-shake 0.35s ease-in-out infinite; }
 .pet-sleep .pet-body { animation: koji-sleep 2s ease-in-out infinite; }

@@ -266,7 +266,7 @@ input:focus, select:focus, textarea:focus {
 .danger-zone { background: rgba(255, 237, 237, 0.7); }
 .electron-desktop-mode .koji-pet { display: none; }
 .electron-desktop-mode .settings-card::after {
-  content: "v0.3 Electron 桌面版会使用独立透明桌宠窗口；这里保留 Koji 状态预览 / 动作测试。";
+  content: "v0.4 Electron 桌宠交互版会使用独立透明 Koji 窗口；这里保留 Koji 状态预览 / 动作测试。";
   display: block;
   margin-top: 0.75rem;
   color: var(--muted);
@@ -437,3 +437,18 @@ input:focus, select:focus, textarea:focus {
   .pet-face { width: 68px; height: 68px; font-size: 2rem; }
   .pet-mini-button { width: 54px; height: 54px; min-height: 54px; }
 }
+.pet-collect .pet-avatar { animation: koji-pop 0.8s ease-in-out infinite; }
+.pet-drag .pet-avatar { animation: koji-drag 0.55s ease-in-out infinite; }
+@keyframes koji-drag { 0%, 100% { transform: rotate(-5deg) scale(1.02); } 50% { transform: rotate(5deg) scale(1.05); } }
+.pet-asset-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  background: rgba(255, 248, 238, 0.72);
+}
+.pet-asset-checklist strong { grid-column: 1 / -1; }
+.pet-asset-checklist code { font-size: 0.78rem; color: #745640; overflow-wrap: anywhere; }
