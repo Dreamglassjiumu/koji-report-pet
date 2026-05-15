@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld("kojiDesktop", {
   submitQuickRecord: (text, tag) => ipcRenderer.invoke("quick-record:add", { text, tag }),
   showPetContextMenu: () => ipcRenderer.invoke("show-pet-context-menu"),
   sendDesktopCommand: (command) => ipcRenderer.invoke("desktop-command:send", command),
+  broadcastSettings: (settings) => ipcRenderer.invoke("settings:broadcast", settings || {}),
   movePetWindow: (deltaX, deltaY) => ipcRenderer.invoke("pet-window:move", { deltaX, deltaY }),
   setPetWindowMode: (mode) => ipcRenderer.invoke("pet-window:set-mode", mode === "quickInput" ? "quickInput" : "compact"),
   onPetStateChanged: (callback) => {
@@ -54,6 +55,12 @@ contextBridge.exposeInMainWorld("kojiDesktop", {
     const listener = (_event, command) => callback(command);
     ipcRenderer.on("desktop-command", listener);
     return () => ipcRenderer.removeListener("desktop-command", listener);
+  },
+  onSettingsChanged: (callback) => {
+    if (typeof callback !== "function") return () => {};
+    const listener = (_event, settings) => callback(settings || {});
+    ipcRenderer.on("settings-changed", listener);
+    return () => ipcRenderer.removeListener("settings-changed", listener);
   },
   quitApp: () => ipcRenderer.invoke("app:quit"),
 });

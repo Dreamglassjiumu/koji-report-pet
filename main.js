@@ -184,6 +184,14 @@ function broadcastPetState(state) {
   });
 }
 
+function broadcastSettings(settings) {
+  [mainWindow, petWindow].forEach((windowRef) => {
+    if (windowRef && !windowRef.isDestroyed()) {
+      windowRef.webContents.send("settings-changed", settings || {});
+    }
+  });
+}
+
 async function sendMainCommand(command) {
   showMainWindow();
   if (mainWindow.webContents.isLoading()) {
@@ -245,6 +253,7 @@ ipcMain.handle("quick-record:add", (_event, { text, tag }) => requestQuickRecord
 ipcMain.handle("show-pet-context-menu", () => showPetContextMenu());
 ipcMain.handle("pet-window:set-mode", (_event, mode) => setPetWindowMode(mode));
 ipcMain.handle("desktop-command:send", (_event, command) => sendMainCommand(command));
+ipcMain.handle("settings:broadcast", (_event, settings) => broadcastSettings(settings));
 ipcMain.handle("pet-window:move", (_event, { deltaX = 0, deltaY = 0 }) => {
   if (!petWindow || petWindow.isDestroyed()) return;
   const [x, y] = petWindow.getPosition();

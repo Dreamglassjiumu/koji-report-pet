@@ -1,28 +1,8 @@
 const defaultTags = ["默认", "Project：X", "毛茸茸骑士", "公司工作", "个人创作", "会议沟通", "资料整理", "功能测试"];
-const successMessages = [
-  "记下了，晚上我帮你整理。",
-  "收到，已经塞进日报素材库。",
-  "好，这条看起来像正经工作。",
-  "已记录，今天不是白干。",
-  "放心，这条我替你存好了。",
-];
-
-const stateOrder = ["idle", "wave", "record_ready", "collect", "success", "thinking", "writing", "happy", "confused", "angry", "sleep", "drag", "error"];
-const petStates = {
-  idle: { key: "idle", label: "待机", emoji: "🐾", image: "assets/koji/idle.png", message: "来了，今天干啥了？", cssClass: "pet-idle", duration: 0 },
-  wave: { key: "wave", label: "打招呼", emoji: "👋", image: "assets/koji/wave.png", message: "嗨，我在桌面陪你记日报。", cssClass: "pet-wave", duration: 1800 },
-  record_ready: { key: "record_ready", label: "准备记录", emoji: "📝", image: "assets/koji/record_ready.png", message: "说吧，今天干啥了？", cssClass: "pet-record-ready", duration: 0 },
-  collect: { key: "collect", label: "收集记录", emoji: "📥", image: "assets/koji/collect.png", message: "收到，已经收进日报素材库。", cssClass: "pet-collect", duration: 2400 },
-  success: { key: "success", label: "通用成功", emoji: "✅", image: "assets/koji/success.png", message: "这条我记下了。", cssClass: "pet-success", duration: 2200 },
-  thinking: { key: "thinking", label: "思考", emoji: "🤔", image: "assets/koji/thinking.png", message: "我琢磨一下怎么归档。", cssClass: "pet-thinking", duration: 1800 },
-  writing: { key: "writing", label: "写日报", emoji: "✍️", image: "assets/koji/writing.png", message: "日报我来写！", cssClass: "pet-writing", duration: 2400 },
-  happy: { key: "happy", label: "开心", emoji: "🎉", image: "assets/koji/happy.png", message: "复制好了，去交差吧！", cssClass: "pet-happy", duration: 2400 },
-  confused: { key: "confused", label: "疑惑", emoji: "😵‍💫", image: "assets/koji/confused.png", message: "你还什么都没说呢。", cssClass: "pet-confused", duration: 2600 },
-  angry: { key: "angry", label: "催日报", emoji: "😾", image: "assets/koji/angry.png", message: "你是不是又忘写日报了？", cssClass: "pet-angry", duration: 3000 },
-  sleep: { key: "sleep", label: "困倦", emoji: "💤", image: "assets/koji/sleep.png", message: "太晚了，日报写完就收工吧。", cssClass: "pet-sleep", duration: 2600 },
-  drag: { key: "drag", label: "拖动", emoji: "🌀", image: "assets/koji/drag.png", message: "别拎我耳朵，放这也行。", cssClass: "pet-drag", duration: 0 },
-  error: { key: "error", label: "报错", emoji: "⚠️", image: "assets/koji/error.png", message: "哎呀，好像哪里失败了。", cssClass: "pet-error", duration: 3200 },
-};
+const kojiConfig = window.KojiConfig;
+const stateOrder = kojiConfig.stateOrder;
+const petStates = kojiConfig.petStates;
+const defaultPetSettings = { kojiTone: "standard", hourlyChimeEnabled: false, currentCharacter: "koji", currentSkin: "default", lastHourlyChimeKey: "" };
 
 const $ = (selector) => document.querySelector(selector);
 let petTimer = null;
@@ -31,9 +11,13 @@ let dragInfo = null;
 let suppressClickUntil = 0;
 let currentStateKey = "idle";
 let quickRecordVisible = false;
+let petSettings = loadPetSettings();
+let hourlyTimer = null;
 
 function assetCandidates(state) {
-  return ["png", "webp", "gif"].map((ext) => `assets/koji/${state.key}.${ext}`);
+  const candidates = [...kojiConfig.getAssetCandidates(state.key, petSettings.currentCharacter, petSettings.currentSkin)];
+  if (state.key !== "idle") candidates.push(...kojiConfig.getAssetCandidates("idle", petSettings.currentCharacter, petSettings.currentSkin));
+  return candidates;
 }
 
 function renderFace(state) {
@@ -42,6 +26,7 @@ function renderFace(state) {
   let index = 0;
   const tryNext = () => {
     if (index >= candidates.length) {
+      face.innerHTML = "";
       face.textContent = state.emoji;
       return;
     }
@@ -71,7 +56,7 @@ function setPetState(stateKey, overrideDuration) {
 
   clearTimeout(petTimer);
   shell.className = `pet-shell ${state.cssClass}`;
-  setBubble(state.message);
+  setBubble(kojiConfig.getDialogue(state.key, petSettings.kojiTone, state.message));
   $("#petLabel").textContent = state.label;
   renderFace(state);
 
@@ -84,6 +69,77 @@ function setPetState(stateKey, overrideDuration) {
 function sendPetState(state) {
   setPetState(state);
   window.kojiDesktop?.setPetState?.(state);
+}
+
+function loadPetSettings() {
+  try {
+    const stored = JSON.parse(localStorage.getItem("kojiReportPet.settings") || "{}");
+    return {
+      ...defaultPetSettings,
+      ...stored,
+      kojiTone: kojiConfig.normalizeTone(stored.kojiTone),
+      hourlyChimeEnabled: Boolean(stored.hourlyChimeEnabled),
+      currentCharacter: stored.currentCharacter || "koji",
+      currentSkin: stored.currentSkin || "default",
+      lastHourlyChimeKey: stored.lastHourlyChimeKey || "",
+    };
+  } catch (error) {
+    return { ...defaultPetSettings };
+  }
+}
+
+function savePetSettings() {
+  const stored = (() => {
+    try { return JSON.parse(localStorage.getItem("kojiReportPet.settings") || "{}"); } catch (error) { return {}; }
+  })();
+  localStorage.setItem("kojiReportPet.settings", JSON.stringify({ ...stored, ...petSettings }));
+}
+
+function applyPetSettings(nextSettings = {}) {
+  petSettings = {
+    ...petSettings,
+    ...nextSettings,
+    kojiTone: kojiConfig.normalizeTone(nextSettings.kojiTone || petSettings.kojiTone),
+    hourlyChimeEnabled: Object.prototype.hasOwnProperty.call(nextSettings, "hourlyChimeEnabled")
+      ? Boolean(nextSettings.hourlyChimeEnabled)
+      : petSettings.hourlyChimeEnabled,
+    currentCharacter: nextSettings.currentCharacter || petSettings.currentCharacter || "koji",
+    currentSkin: nextSettings.currentSkin || petSettings.currentSkin || "default",
+    lastHourlyChimeKey: nextSettings.lastHourlyChimeKey || petSettings.lastHourlyChimeKey || "",
+  };
+  if (currentStateKey) setPetState(currentStateKey, currentStateKey === "idle" ? 0 : undefined);
+}
+
+function getChimeState(hour) {
+  if (hour >= 23 || hour <= 5) return "sleep";
+  if (hour === 12) return "happy";
+  if (hour >= 17 && hour <= 19) return "angry";
+  return "wave";
+}
+
+function checkHourlyChime() {
+  if (!petSettings.hourlyChimeEnabled || petSettings.kojiTone === "quiet") return;
+  const now = new Date();
+  if (now.getMinutes() !== 0) return;
+  const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}`;
+  if (petSettings.lastHourlyChimeKey === key) return;
+  petSettings.lastHourlyChimeKey = key;
+  savePetSettings();
+  if (quickRecordVisible) return;
+  const state = petStates[getChimeState(now.getHours())] || petStates.wave;
+  clearTimeout(petTimer);
+  currentStateKey = state.key;
+  $("#petShell").className = `pet-shell ${state.cssClass}`;
+  setBubble(kojiConfig.getHourlyLine(now.getHours(), petSettings.kojiTone));
+  $("#petLabel").textContent = `${state.label} · 整点报时`;
+  renderFace(state);
+  petTimer = setTimeout(() => setPetState("idle"), 7000);
+}
+
+function setupHourlyChime() {
+  clearInterval(hourlyTimer);
+  checkHourlyChime();
+  hourlyTimer = setInterval(checkHourlyChime, 30000);
 }
 
 function loadTags() {
@@ -125,7 +181,6 @@ async function submitQuickRecord() {
   const text = $("#quickRecordText").value.trim();
   const tag = $("#quickRecordTag").value || "公司工作";
   if (!text) {
-    setBubble("你还什么都没说呢。");
     sendPetState("confused");
     $("#quickRecordText").focus();
     return;
@@ -139,10 +194,8 @@ async function submitQuickRecord() {
     $("#quickRecordText").value = "";
     window.kojiDesktop?.setPetWindowMode?.("compact");
     sendPetState("collect");
-    setBubble(successMessages[Math.floor(Math.random() * successMessages.length)]);
   } catch (error) {
     console.error(error);
-    setBubble("记录失败了，打开面板再试试。 ");
     sendPetState("error");
   }
 }
@@ -235,6 +288,16 @@ function bindPetEvents() {
   window.kojiDesktop?.onPetCommand?.((command) => {
     if (command === "quick-record") showQuickRecord();
   });
+  window.kojiDesktop?.onSettingsChanged?.((nextSettings) => {
+    applyPetSettings(nextSettings);
+    setupHourlyChime();
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === "kojiReportPet.settings") {
+      applyPetSettings(loadPetSettings());
+      setupHourlyChime();
+    }
+  });
   bindManualDrag();
 }
 
@@ -243,9 +306,11 @@ function init() {
     if (!petStates[stateKey]) console.warn(`缺少 Koji 状态：${stateKey}`);
   });
   bindPetEvents();
+  petSettings = loadPetSettings();
   loadTags();
   window.kojiDesktop?.setPetWindowMode?.("compact");
   setPetState("idle");
+  setupHourlyChime();
 }
 
 document.addEventListener("DOMContentLoaded", init);
