@@ -17,24 +17,16 @@
     error: { key: "error", label: "报错", emoji: "⚠️", message: "哎呀，本地保存或复制好像失败了。", cssClass: "pet-error", duration: 3200 },
   };
 
-  const fallbackDialogues = {
-    standard: Object.fromEntries(stateOrder.map((key) => [key, [petStates[key].message]])),
-  };
+  const fallbackDialogues = Object.fromEntries(stateOrder.map((key) => [key, [petStates[key].message]]));
   const dialogues = window.KOJI_DIALOGUES || fallbackDialogues;
-  const hourlyDialogues = window.KOJI_HOURLY_DIALOGUES || { standard: {} };
+  const hourlyDialogues = window.KOJI_HOURLY_DIALOGUES || {};
   const memeSafePool = window.KOJI_MEME_SAFE_POOL || [];
   const dialogueMeta = window.KOJI_DIALOGUE_META || {
-    tones: [
-      { id: "standard", label: "标准 Koji" },
-      { id: "sassy", label: "更贱一点" },
-      { id: "formal", label: "更正经一点" },
-      { id: "mixed", label: "中英日混合" },
-      { id: "quiet", label: "少说话模式" },
-    ],
+    tones: [{ id: "default", label: "默认 Koji" }],
     states: stateOrder.map((key) => ({ key, label: petStates[key].label })),
   };
 
-  const toneOptions = dialogueMeta.tones.reduce((options, tone) => ({ ...options, [tone.id]: tone.label }), {});
+  const toneOptions = { default: "默认 Koji" };
 
   const characters = {
     koji: {
@@ -53,9 +45,8 @@
     },
   };
 
-  function normalizeTone(tone) {
-    if (tone === "serious") return "formal";
-    return toneOptions[tone] ? tone : "standard";
+  function normalizeTone() {
+    return "default";
   }
 
   function pickRandom(list) {
@@ -63,24 +54,22 @@
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  function getDialoguePool(stateKey, tone) {
-    const normalizedTone = normalizeTone(tone);
-    return dialogues[normalizedTone]?.[stateKey] || dialogues.standard?.[stateKey] || [];
+  function getDialoguePool(stateKey) {
+    return dialogues[stateKey] || dialogues.default?.[stateKey] || [];
   }
 
   function getDialogue(stateKey, tone, fallback) {
-    return pickRandom(getDialoguePool(stateKey, tone)) || fallback || petStates[stateKey]?.message || "Koji 在。";
+    return pickRandom(getDialoguePool(stateKey)) || fallback || petStates[stateKey]?.message || "Koji 在。";
   }
 
-  function getHourlyPool(hour, tone) {
+  function getHourlyPool(hour) {
     const hourKey = String(hour).padStart(2, "0");
-    const normalizedTone = normalizeTone(tone);
-    return hourlyDialogues[normalizedTone]?.[hourKey] || hourlyDialogues.standard?.[hourKey] || [];
+    return hourlyDialogues[hourKey] || hourlyDialogues.default?.[hourKey] || [];
   }
 
-  function getHourlyLine(hour, tone) {
+  function getHourlyLine(hour) {
     const hourNumber = Number(hour);
-    return pickRandom(getHourlyPool(hourNumber, tone)) || `现在是 ${hourNumber} 点，Koji 提醒你记一下今日素材。`;
+    return pickRandom(getHourlyPool(hourNumber)) || `现在是 ${hourNumber} 点，Koji 提醒你记一下今日素材。`;
   }
 
   function getCharacter(characterId = "koji", skinId = "default") {
